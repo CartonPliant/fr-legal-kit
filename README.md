@@ -2,7 +2,7 @@
 
 x402 API for AI agents. Offline French legal helpers. **$0.01 USDC** on Base per call. No INSEE, no scrape, no PDP.
 
-Live (after deploy): `https://fr-legal-kit.<sub>.workers.dev`
+Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 
 ## Routes
 
