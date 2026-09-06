@@ -1,0 +1,9 @@
+name = "fr-legal-kit"
+main = "src/worker.js"
+compatibility_date = "2025-09-01"
+account_id = "05f185c3e96c8819c515e5d739b29643"
+workers_dev = true
+
+[vars]
+FACILITATOR_URL = "https://facilitator.payai.network"
+PAY_TO = "0xc361074554c13EEE51feab63ED180EF6b9911B3e"
