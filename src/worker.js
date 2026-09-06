@@ -152,14 +152,14 @@ async function handlePaid(req, env, path, description, tags, bazaar, fn) {
 const ROUTES = {
   "/v1/late-penalties": {
     description:
-      "French L441-10 late-payment: BCE+10pts interest + 40€ indemnity from amount_ht and days_late. No live BCE fetch.",
+      "French L441-10 late-payment: BCE MRO+10pts interest + 40€ indemnity (D.441-5) from amount_ttc and days_late. Default MRO 2.40% (H2 2026, ECB). No live BCE fetch.",
     tags: ["france", "invoice", "L441-10", "penalties", "legal"],
     bazaar: {
       info: {
         input: {
           type: "http",
           method: "POST",
-          body: { amount_ht: 1000, days_late: 30, bce_refi_pct: 2.15 },
+          body: { amount_ttc: 1000, days_late: 30, bce_refi_pct: 2.4 },
         },
         output: { type: "json", example: { ok: true, total_eur: 50.12, clause: "..." } },
       },
@@ -217,7 +217,7 @@ JSON: { "size": "micro"|"pme"|"eti"|"ge", "as_of": "YYYY-MM-DD" }
 or { "employees": 12, "ca_eur": 400000 }
 
 POST ${base}/v1/late-penalties
-JSON: { "amount_ht": 1200, "days_late": 18, "bce_refi_pct": 2.15 }
+JSON: { "amount_ttc": 1200, "days_late": 18, "bce_refi_pct": 2.4 }
 
 POST ${base}/v1/check-siret
 JSON: { "siret": "14 digits" }

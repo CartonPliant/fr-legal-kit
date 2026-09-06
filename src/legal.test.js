@@ -43,7 +43,17 @@ describe("latePenalties", () => {
   it("lists missing fields", () => {
     const r = latePenalties({});
     assert.equal(r.ok, false);
-    assert.ok(r.missing.includes("amount_ht"));
+    assert.ok(r.missing.includes("amount_ttc"));
+  });
+  it("defaults BCE MRO to the H2-2026 frozen 2.40 %", () => {
+    const r = latePenalties({ amount_ttc: 1000, days_late: 365 });
+    assert.equal(r.ok, true);
+    assert.equal(r.bce_refi_pct, 2.4);
+    assert.equal(r.bce_refi_pct_defaulted, true);
+    assert.equal(r.annual_rate_pct, 12.4);
+    assert.equal(r.interest_eur, 124);
+    assert.equal(r.indemnity_eur, 40);
+    assert.equal(r.total_eur, 164);
   });
 });
 

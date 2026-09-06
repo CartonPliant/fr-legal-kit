@@ -50,46 +50,61 @@ export function ibanOk(raw) {
 }
 
 /**
- * L441-10 C. com. late-payment: BCE refinancing rate + 10 points, 40 € recovery indemnity.
- * Prorata 365 days. bce_refi_pct is an input (no live BCE fetch).
+ * L441-10 C. com. late-payment (supplétif): BCE main refinancing rate + 10 points,
+ * semester-frozen (1 Jan / 1 Jul), + 40 € indemnity (D.441-5).
+ * No live BCE fetch (Worker 10 ms / 50 subrequest budget). Default is the
+ * H2-2026 frozen MRO, sourced 2026-09-07:
+ * ECB Data Portal MRO 2.40 % from 17 June 2026, held 23 July 2026
+ * https://data.ecb.europa.eu/key-figures/ecb-interest-rates-and-exchange-rates/key-ecb-interest-rates
+ * https://www.ecb.europa.eu/press/pr/date/2026/html/ (11 June +25 bp; 23 July hold)
  */
+export const BCE_MRO_PCT_H2_2026 = 2.4;
+export const INDEMNITY_EUR = 40;
+
 export function latePenalties(input) {
   const i = input && typeof input === "object" ? input : {};
-  const amount = Number(i.amount_ht ?? i.amount);
+  const amount = Number(i.amount_ttc ?? i.amount_due ?? i.amount_ht ?? i.amount);
   const days = Number(i.days_late ?? i.days);
   const bceIn = i.bce_refi_pct;
-  const bce = bceIn === undefined || bceIn === null || bceIn === "" ? 2.15 : Number(bceIn);
+  const bce = bceIn === undefined || bceIn === null || bceIn === "" ? BCE_MRO_PCT_H2_2026 : Number(bceIn);
   const missing = [];
-  if (!Number.isFinite(amount) || amount < 0) missing.push("amount_ht");
+  if (!Number.isFinite(amount) || amount < 0) missing.push("amount_ttc");
   if (!Number.isFinite(days) || days < 0) missing.push("days_late");
   if (!Number.isFinite(bce)) missing.push("bce_refi_pct");
   if (missing.length) {
     return {
       ok: false,
       missing,
-      error: "Need amount_ht (EUR) and days_late (>=0). Optional bce_refi_pct (annual %).",
+      error: "Need amount_ttc (EUR unpaid, usually TTC) and days_late (>=0). Optional bce_refi_pct (annual %; default = BCE MRO at 1 Jul 2026 = 2.40).",
     };
   }
   const annualPct = bce + 10;
   const interest = amount * (annualPct / 100) * (days / 365);
-  const indemnity = 40;
+  const indemnity = INDEMNITY_EUR;
   const total = interest + indemnity;
   const round2 = (n) => Math.round(n * 100) / 100;
   const clause =
-    "Pénalités de retard : taux directeur de la BCE + 10 points, exigibles le jour suivant la date de règlement figurant sur la facture, sans rappel (L441-10 C. com.). Indemnité forfaitaire pour frais de recouvrement : 40 €.";
+    "Pénalités de retard : taux d'intérêt appliqué par la BCE à son opération de refinancement la plus récente, majoré de 10 points de pourcentage, exigibles le jour suivant la date de règlement figurant sur la facture, sans rappel (L441-10 II C. com.). Indemnité forfaitaire pour frais de recouvrement : 40 € (D.441-5 C. com.).";
   return {
     ok: true,
+    amount_ttc: round2(amount),
     amount_ht: round2(amount),
     days_late: days,
     bce_refi_pct: bce,
     bce_refi_pct_defaulted: bceIn === undefined || bceIn === null || bceIn === "",
+    bce_refi_semester: "H2-2026 (taux en vigueur au 1er juillet, L441-10 II)",
     annual_rate_pct: annualPct,
     day_count: 365,
     interest_eur: round2(interest),
     indemnity_eur: indemnity,
     total_eur: round2(total),
     clause,
-    source: "C. com. L441-10. BCE rate is caller-supplied (default 2.15 if omitted). Not legal advice.",
+    source: {
+      l441_10: "C. com. L441-10 II — BCE MRO + 10 points, frozen 1 Jan / 1 Jul",
+      d441_5: "C. com. D.441-5 — indemnité 40 €",
+      bce_mro_default: "2.40 % from 17 June 2026 (ECB Data Portal; 23 July 2026 hold). Pass bce_refi_pct to override.",
+      not: "Not legal advice. Unpaid amount is usually TTC.",
+    },
   };
 }
 
