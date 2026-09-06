@@ -305,7 +305,7 @@ export default {
         headers: { "content-type": "text/plain; charset=utf-8", "access-control-allow-origin": "*" },
       });
     }
-    if (path === "/.well-known/x402.json" && req.method === "GET") {
+    if ((path === "/.well-known/x402.json" || path === "/.well-known/x402") && req.method === "GET") {
       return json(wellKnownX402(req, env));
     }
     if (path === "/.well-known/agent-card.json" && req.method === "GET") {
