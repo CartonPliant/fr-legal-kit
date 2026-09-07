@@ -615,6 +615,48 @@ export function openDays(input) {
   };
 }
 
+/** L441-9 chronological invoice numbering helper. */
+export function invoiceNumbering(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const last = String(i.last_number || i.last || "").trim();
+  const rules = [
+    { id: "unique", text: "Numéro unique pour chaque facture." },
+    { id: "chrono", text: "Fondé sur une séquence chronologique continue (C. com. L441-9)." },
+    { id: "no_gap", text: "Pas de trou : une facture annulée conserve son numéro ; un avoir ne le réutilise pas." },
+    { id: "multi_seq", text: "Plusieurs séquences possibles (établissement, année, catégorie) si chacune est chronologique." },
+    { id: "prefix", text: "Un préfixe (année, site) est admis tant que la partie numérique reste continue dans la séquence." },
+  ];
+  let prefix = "";
+  let seq = null;
+  let width = 4;
+  if (last) {
+    const m = /^(.*?)(\d+)$/.exec(last);
+    if (!m) {
+      return { ok: false, error: "last_number must end with digits (e.g. F-2026-0042)." };
+    }
+    prefix = m[1];
+    seq = Number(m[2]);
+    width = m[2].length;
+  } else if (i.last_seq !== undefined && i.last_seq !== null && i.last_seq !== "") {
+    seq = Number(i.last_seq);
+    if (!Number.isFinite(seq) || seq < 0 || !Number.isInteger(seq)) {
+      return { ok: false, missing: ["last_seq"], error: "last_seq must be a non-negative integer." };
+    }
+    const year = i.year != null ? String(i.year) : "";
+    prefix = i.prefix != null ? String(i.prefix) : year ? `F-${year}-` : "F-";
+    width = Number(i.width) > 0 ? Number(i.width) : 4;
+  }
+  const next = seq === null ? null : `${prefix}${String(seq + 1).padStart(width, "0")}`;
+  return {
+    ok: true,
+    last_number: last || null,
+    next_number: next,
+    rules,
+    source: "C. com. L441-9 I (numérotation chronologique continue).",
+    note: "Next number in one sequence. Does not prove the books have no gaps. Devis numbering is commercial usage, not L441-9. Not a legal opinion.",
+  };
+}
+
 /** Statutory ceiling on agreed B2B payment terms (L441-10 I). */
 export function paymentTermMax(input) {
   const i = input && typeof input === "object" ? input : {};

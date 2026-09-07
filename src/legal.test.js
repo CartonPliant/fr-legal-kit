@@ -16,6 +16,7 @@ import {
   franchise293b,
   dunningSteps,
   openDays,
+  invoiceNumbering,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -216,5 +217,20 @@ describe("openDays", () => {
     const r = openDays({ from: "2026-04-03", to: "2026-04-07", alsace_moselle: true });
     assert.equal(r.holiday_days, 2);
     assert.equal(r.open_days_inclusive, 1);
+  });
+});
+
+describe("invoiceNumbering", () => {
+  it("increments F-2026-0042", () => {
+    const r = invoiceNumbering({ last_number: "F-2026-0042" });
+    assert.equal(r.ok, true);
+    assert.equal(r.next_number, "F-2026-0043");
+    assert.ok(r.rules.some((x) => x.id === "no_gap"));
+  });
+  it("returns rules without a last number", () => {
+    const r = invoiceNumbering({});
+    assert.equal(r.ok, true);
+    assert.equal(r.next_number, null);
+    assert.ok(r.rules.length >= 4);
   });
 });

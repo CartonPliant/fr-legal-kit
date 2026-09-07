@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -332,6 +332,18 @@ const ROUTES = {
     },
     fn: openDays,
   },
+  "/v1/invoice-numbering": {
+    description:
+      "French invoice numbering helper (C. com. L441-9): unique chronological sequence, no gaps. Returns next number from last_number plus the statutory rules.",
+    tags: ["france", "invoice", "L441-9", "numbering"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { last_number: "F-2026-0042" } },
+        output: { type: "json", example: { ok: true, next_number: "F-2026-0043" } },
+      },
+    },
+    fn: invoiceNumbering,
+  },
 };
 
 function llmsTxt(base) {
@@ -384,6 +396,9 @@ or { "invoice_date": "2026-09-01", "net_days": 30 }
 
 POST ${base}/v1/open-days
 JSON: { "from": "2026-04-03", "to": "2026-04-07", "alsace_moselle": false }
+
+POST ${base}/v1/invoice-numbering
+JSON: { "last_number": "F-2026-0042" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
