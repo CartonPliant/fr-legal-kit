@@ -64,6 +64,8 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/garantie-commerciale` | Commercial warranty (L.217-21), distinct from the 2-year legal one |
 | `/v1/export` | VAT exemption: CGI 262 extra-EU or 262 ter I intra-EU |
 | `/v1/proforma` | Pro forma header — not an invoice (CGI 289) |
+| `/v1/jours-francs` | Jours francs (CPC 642): start day out, weekend/holiday rolls |
+| `/v1/clause-penale` | Contractual penalty clause (C. civ. 1231-5), not L441-10 |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

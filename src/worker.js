@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma, joursFrancs, clausePenale } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -876,6 +876,30 @@ const ROUTES = {
     },
     fn: proforma,
   },
+  "/v1/jours-francs": {
+    description:
+      "French jours francs (C. proc. civ. 642): start day excluded; Saturday/Sunday/holiday rolls to the next open day. Métropole holidays 2026–2027.",
+    tags: ["france", "delai", "francs", "CPC642", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { from: "2026-09-07", days: 8 } },
+        output: { type: "json", example: { ok: true, expires_on: "2026-09-15" } },
+      },
+    },
+    fn: joursFrancs,
+  },
+  "/v1/clause-penale": {
+    description:
+      "French contractual penalty clause (C. civ. 1231-5). Optional amount. Distinct from statutory L441-10 late-payment.",
+    tags: ["france", "contrat", "penale", "1231-5", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { amount_eur: 150 } },
+        output: { type: "json", example: { ok: true } },
+      },
+    },
+    fn: clausePenale,
+  },
 };
 
 function llmsTxt(base) {
@@ -1060,6 +1084,12 @@ JSON: { "kind": "extra_eu" }
 
 POST ${base}/v1/proforma
 JSON: { "number": "PF-2026-001" }
+
+POST ${base}/v1/jours-francs
+JSON: { "from": "2026-09-07", "days": 8 }
+
+POST ${base}/v1/clause-penale
+JSON: { "amount_eur": 150 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

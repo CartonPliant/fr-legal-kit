@@ -2476,3 +2476,50 @@ export function proforma(input) {
     note: "Does not create VAT. Use /v1/doc-title for Facture/Devis. Not legal advice.",
   };
 }
+
+/** Jours francs (C. proc. civ. 642): start day not counted; last weekend/holiday rolls to next open day. */
+export function joursFrancs(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const start = parseISODate(i.from || i.date || i.start);
+  const n = Number(i.days ?? i.n ?? i.jours);
+  const alsace = Boolean(i.alsace_moselle);
+  if (!start) return { ok: false, missing: ["from"], error: "from YYYY-MM-DD." };
+  if (!Number.isInteger(n) || n < 1 || n > 3650) return { ok: false, missing: ["days"], error: "days integer 1–3650." };
+  const rawEnd = addDays(start, n);
+  const end = nextOpenDay(rawEnd, alsace);
+  const rolled = ymd(end) !== ymd(rawEnd);
+  const formatted = dateFr({ date: ymd(end) }).formatted;
+  return {
+    ok: true,
+    from: ymd(start),
+    days: n,
+    calendar_end: ymd(rawEnd),
+    expires_on: ymd(end),
+    rolled_to_open: rolled,
+    alsace_moselle: alsace,
+    mention: `Délai de ${n} jour${n > 1 ? "s" : ""} franc${n > 1 ? "s" : ""} à compter du ${dateFr({ date: ymd(start) }).formatted} : jusqu'au ${formatted}${rolled ? " (prorogé au premier jour ouvrable)" : ""} (C. proc. civ. 642).`,
+    source: "C. proc. civ. 642 (jour de l'acte non compté ; samedi, dimanche, férié → premier jour ouvrable suivant).",
+    note: "Procedural default, often used for contractual jours francs. Holidays: L.3133-1 2026–2027 métropole. Not legal advice.",
+  };
+}
+
+/** Contractual penalty clause (C. civ. 1231-5). Judge may reduce a manifestly excessive amount. */
+export function clausePenale(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = i.amount_eur ?? i.amount ?? i.montant;
+  let amount = null;
+  if (raw !== undefined && raw !== null && raw !== "") {
+    amount = Number(String(raw).replace(/\s/g, "").replace(",", "."));
+    if (!Number.isFinite(amount) || amount < 0) return { ok: false, error: "amount_eur >= 0." };
+  }
+  const mention = amount != null
+    ? `Clause pénale : ${formatEurFr(amount)} en cas d'inexécution (C. civ. 1231-5).`
+    : "Clause pénale : une indemnité forfaitaire est due en cas d'inexécution (C. civ. 1231-5).";
+  return {
+    ok: true,
+    amount_eur: amount,
+    mention,
+    source: "C. civ. 1231-5 (clause pénale ; le juge peut la modérer si manifestement excessive ou dérisoire).",
+    note: "Contractual. Distinct from L441-10 statutory late-payment. Not legal advice.",
+  };
+}

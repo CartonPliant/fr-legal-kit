@@ -60,6 +60,8 @@ import {
   garantieCommerciale,
   exportVat,
   proforma,
+  joursFrancs,
+  clausePenale,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -985,5 +987,37 @@ describe("proforma", () => {
   it("works without a number", () => {
     const r = proforma({});
     assert.match(r.mention, /pro forma/);
+  });
+});
+
+describe("joursFrancs", () => {
+  it("does not count the start day: 8 francs from Monday 7 Sept = 15 Sept", () => {
+    const r = joursFrancs({ from: "2026-09-07", days: 8 });
+    assert.equal(r.ok, true);
+    assert.equal(r.expires_on, "2026-09-15");
+    assert.equal(r.rolled_to_open, false);
+  });
+  it("rolls a Saturday end to Monday", () => {
+    const r = joursFrancs({ from: "2026-09-04", days: 1 });
+    assert.equal(r.calendar_end, "2026-09-05");
+    assert.equal(r.expires_on, "2026-09-07");
+    assert.equal(r.rolled_to_open, true);
+  });
+  it("requires days", () => {
+    const r = joursFrancs({ from: "2026-09-07" });
+    assert.equal(r.ok, false);
+  });
+});
+
+describe("clausePenale", () => {
+  it("formats a euro amount", () => {
+    const r = clausePenale({ amount_eur: 150 });
+    assert.equal(r.ok, true);
+    assert.match(r.mention, /150,00/);
+    assert.match(r.mention, /1231-5/);
+  });
+  it("works without an amount", () => {
+    const r = clausePenale({});
+    assert.match(r.mention, /indemnité forfaitaire/);
   });
 });
