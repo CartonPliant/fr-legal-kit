@@ -1480,3 +1480,44 @@ export function invoiceCurrency(input) {
     note: "ISO 4217 subset, offline. Not an FX rate. Not a tax ruling.",
   };
 }
+
+/** L441-9 / L441-10: early-payment discount conditions, or the statutory "pas d'escompte" mention. */
+export function escompte(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const none = i.none === true || i.no_discount === true || i.pas_escompte === true;
+  const rateRaw = i.rate_pct ?? i.rate ?? i.escompte_pct ?? i.percent;
+  const daysRaw = i.days ?? i.within_days ?? i.delai_jours;
+  const hasRate = rateRaw !== undefined && rateRaw !== null && rateRaw !== "";
+  const empty = {
+    ok: true,
+    has_discount: false,
+    rate_pct: 0,
+    days: null,
+    mention: "Pas d'escompte pour paiement anticipé.",
+    source: "C. com. L441-9 / L441-10 (conditions d'escompte pour paiement anticipé).",
+    note: "Statutory invoice mention. Not a commercial offer. Not legal advice.",
+  };
+  if (none || !hasRate) return empty;
+  const rate = Number(rateRaw);
+  if (!Number.isFinite(rate) || rate < 0 || rate > 100) {
+    return { ok: false, error: "rate_pct between 0 and 100." };
+  }
+  if (rate === 0) return empty;
+  let days = 8;
+  if (daysRaw !== undefined && daysRaw !== null && daysRaw !== "") {
+    days = Number(daysRaw);
+    if (!Number.isInteger(days) || days < 1 || days > 60) {
+      return { ok: false, error: "days integer 1–60." };
+    }
+  }
+  const rateFr = String(rate).replace(".", ",");
+  return {
+    ok: true,
+    has_discount: true,
+    rate_pct: rate,
+    days,
+    mention: `Escompte de ${rateFr} % pour paiement sous ${days} jours.`,
+    source: "C. com. L441-9 / L441-10 (conditions d'escompte pour paiement anticipé).",
+    note: "Collable mention. Does not compute the discounted amount. Not legal advice.",
+  };
+}

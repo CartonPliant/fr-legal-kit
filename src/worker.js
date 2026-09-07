@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -546,6 +546,21 @@ const ROUTES = {
     },
     fn: invoiceCurrency,
   },
+  "/v1/escompte": {
+    description:
+      "French invoice early-payment discount mention (L441-9 / L441-10): collable 'Pas d'escompte pour paiement anticipé.' or 'Escompte de X % pour paiement sous N jours.'",
+    tags: ["france", "invoice", "escompte", "L441-10", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { rate_pct: 2, days: 10 } },
+        output: {
+          type: "json",
+          example: { ok: true, mention: "Escompte de 2 % pour paiement sous 10 jours." },
+        },
+      },
+    },
+    fn: escompte,
+  },
 };
 
 function llmsTxt(base) {
@@ -649,6 +664,9 @@ JSON: { "city": "Pau", "siren": "404833048" }
 
 POST ${base}/v1/invoice-currency
 JSON: { "currency": "EUR" }
+
+POST ${base}/v1/escompte
+JSON: { "rate_pct": 2, "days": 10 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

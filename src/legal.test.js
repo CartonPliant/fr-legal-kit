@@ -33,6 +33,7 @@ import {
   capitalSocial,
   rcsMention,
   invoiceCurrency,
+  escompte,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -489,5 +490,22 @@ describe("invoiceCurrency", () => {
   });
   it("rejects an unknown code", () => {
     assert.equal(invoiceCurrency({ currency: "XYZ" }).ok, false);
+  });
+});
+
+describe("escompte", () => {
+  it("returns the statutory no-discount mention by default", () => {
+    const r = escompte({});
+    assert.equal(r.ok, true);
+    assert.equal(r.has_discount, false);
+    assert.equal(r.mention, "Pas d'escompte pour paiement anticipé.");
+  });
+  it("formats a 2% / 10-day discount", () => {
+    const r = escompte({ rate_pct: 2, days: 10 });
+    assert.equal(r.has_discount, true);
+    assert.equal(r.mention, "Escompte de 2 % pour paiement sous 10 jours.");
+  });
+  it("treats rate 0 as no discount", () => {
+    assert.equal(escompte({ rate_pct: 0 }).has_discount, false);
   });
 });
