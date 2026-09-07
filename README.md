@@ -58,6 +58,8 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/delivery` | Date of supply vs invoice date (CGI 289 / 242 nonies A) |
 | `/v1/line` | L441-9 invoice line: designation + qty/unit + unit price HT |
 | `/v1/page` | Multi-page invoice footer: Page X/Y |
+| `/v1/retractation` | 14-day consumer withdrawal (L.221-18). B2C distance/off-premises |
+| `/v1/conservation` | Keep the invoice 10 years (L123-22) / 6 years tax (LPF L102 B) |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

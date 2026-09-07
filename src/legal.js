@@ -2288,3 +2288,75 @@ export function page(input) {
     note: "Does not increment the invoice number. Not legal advice.",
   };
 }
+
+/** 14-day consumer withdrawal (C. conso L.221-18 / L.221-19). Distance / off-premises. */
+export function retractation(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const rawBuyer = String(i.buyer || i.audience || "b2c")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  if (rawBuyer === "b2b" || rawBuyer === "professionnel") {
+    return {
+      ok: true,
+      applies: false,
+      days: 14,
+      expires_on: null,
+      mention: "Droit de rétractation (C. conso L.221-18) : ne s'applique pas à un acheteur professionnel.",
+      source: "C. conso L.221-18 (consommateur, contrat à distance ou hors établissement).",
+      note: "B2B has no statutory 14-day cooling-off. Not legal advice.",
+    };
+  }
+  const rawKind = String(i.kind || i.subject || "services")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const goods = rawKind === "goods" || rawKind === "bien" || rawKind === "biens" || rawKind === "marchandise" || rawKind === "marchandises";
+  const start = goods
+    ? parseISODate(i.delivery_date || i.received_on || i.date)
+    : parseISODate(i.contract_date || i.concluded_on || i.date);
+  let expires_on = null;
+  if (start) expires_on = ymd(addDays(start, 14));
+  const formatted = expires_on ? dateFr({ date: expires_on }).formatted : null;
+  const startLabel = goods ? "la réception du bien" : "la conclusion du contrat";
+  const mention = formatted
+    ? `Droit de rétractation : 14 jours à compter de ${startLabel} (jusqu'au ${formatted}) (C. conso L.221-18).`
+    : `Droit de rétractation : 14 jours à compter de ${startLabel} (C. conso L.221-18).`;
+  return {
+    ok: true,
+    applies: true,
+    kind: goods ? "goods" : "services",
+    days: 14,
+    expires_on,
+    mention,
+    source: "C. conso L.221-18 et L.221-19 (délai de 14 jours ; biens : à compter de la prise de possession).",
+    note: "Distance / off-premises B2C. Exceptions L.221-28 not applied here. Not legal advice.",
+  };
+}
+
+/** Invoice retention: 10 years (C. com. L123-22). Tax books often 6 years (LPF L102 B). */
+export function conservation(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const d = parseISODate(i.invoice_date || i.date || i.issued_on);
+  if (!d) return { ok: false, missing: ["invoice_date"], error: "invoice_date YYYY-MM-DD." };
+  const commercial = new Date(d.getTime());
+  commercial.setUTCFullYear(commercial.getUTCFullYear() + 10);
+  const tax = new Date(d.getTime());
+  tax.setUTCFullYear(tax.getUTCFullYear() + 6);
+  const keep_until = ymd(commercial);
+  const tax_until = ymd(tax);
+  const formatted = dateFr({ date: keep_until }).formatted;
+  return {
+    ok: true,
+    invoice_date: ymd(d),
+    keep_until,
+    tax_until,
+    years_commercial: 10,
+    years_tax: 6,
+    mention: `Conservation de la facture : 10 ans (jusqu'au ${formatted}) (C. com. L123-22).`,
+    source: "C. com. L123-22 (10 ans pièces justificatives). LPF L102 B (6 ans livres fiscaux, point de départ distinct).",
+    note: "Calendar add, not fiscal year-end. Electronic invoices have the same duration. Not legal advice.",
+  };
+}

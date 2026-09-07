@@ -54,6 +54,8 @@ import {
   delivery,
   line,
   page,
+  retractation,
+  conservation,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -881,6 +883,38 @@ describe("page", () => {
   });
   it("rejects current above total", () => {
     const r = page({ current: 3, total: 2 });
+    assert.equal(r.ok, false);
+  });
+});
+
+describe("retractation", () => {
+  it("is 14 days from contract for services", () => {
+    const r = retractation({ contract_date: "2026-09-07", kind: "services" });
+    assert.equal(r.ok, true);
+    assert.equal(r.applies, true);
+    assert.equal(r.expires_on, "2026-09-21");
+    assert.match(r.mention, /21\/09\/2026/);
+  });
+  it("starts from delivery for goods", () => {
+    const r = retractation({ delivery_date: "2026-09-10", kind: "goods" });
+    assert.equal(r.expires_on, "2026-09-24");
+  });
+  it("does not apply to a professional buyer", () => {
+    const r = retractation({ buyer: "b2b" });
+    assert.equal(r.applies, false);
+  });
+});
+
+describe("conservation", () => {
+  it("keeps a 2026 invoice until 2036", () => {
+    const r = conservation({ invoice_date: "2026-09-07" });
+    assert.equal(r.ok, true);
+    assert.equal(r.keep_until, "2036-09-07");
+    assert.equal(r.tax_until, "2032-09-07");
+    assert.match(r.mention, /07\/09\/2036/);
+  });
+  it("requires an invoice date", () => {
+    const r = conservation({});
     assert.equal(r.ok, false);
   });
 });

@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -804,6 +804,30 @@ const ROUTES = {
     },
     fn: page,
   },
+  "/v1/retractation": {
+    description:
+      "French 14-day consumer withdrawal (C. conso L.221-18 / L.221-19). Services: from contract date. Goods: from delivery. Does not apply to professional buyers.",
+    tags: ["france", "conso", "retractation", "L221-18", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { contract_date: "2026-09-07", kind: "services" } },
+        output: { type: "json", example: { ok: true, expires_on: "2026-09-21" } },
+      },
+    },
+    fn: retractation,
+  },
+  "/v1/conservation": {
+    description:
+      "French invoice retention: 10 years commercial (C. com. L123-22) and 6 years tax (LPF L102 B) from the invoice date.",
+    tags: ["france", "invoice", "conservation", "L123-22", "archive"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { invoice_date: "2026-09-07" } },
+        output: { type: "json", example: { ok: true, keep_until: "2036-09-07" } },
+      },
+    },
+    fn: conservation,
+  },
 };
 
 function llmsTxt(base) {
@@ -970,6 +994,12 @@ JSON: { "description": "Audit comptable", "qty": 8, "kind": "jour", "unit_ht": 4
 
 POST ${base}/v1/page
 JSON: { "current": 1, "total": 2 }
+
+POST ${base}/v1/retractation
+JSON: { "contract_date": "2026-09-07", "kind": "services" }
+
+POST ${base}/v1/conservation
+JSON: { "invoice_date": "2026-09-07" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
