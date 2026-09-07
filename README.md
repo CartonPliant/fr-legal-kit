@@ -35,6 +35,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/credit-note` | Avoir: next AV- number + CGI 289 mention of original invoice (L441-9, no reuse) |
 | `/v1/phone-fr` | FR phone format (ARCEP): 10 digits / +33 → E.164 + invoice mention. No lookup |
 | `/v1/capital-social` | Share-capital mention (SAS au capital de 1 000,00 €). EI/micro: none |
+| `/v1/rcs-mention` | RCS + greffe city + SIREN (`RCS Pau 404 833 048`). Format, not a Kbis |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

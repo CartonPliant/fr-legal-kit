@@ -31,6 +31,7 @@ import {
   creditNote,
   phoneFr,
   capitalSocial,
+  rcsMention,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -449,5 +450,23 @@ describe("capitalSocial", () => {
     const r = capitalSocial({ form: "sas", amount_eur: 10000, variable: true, min_eur: 1 });
     assert.match(r.mention, /capital variable/);
     assert.match(r.mention, /minimum 1,00 €/);
+  });
+});
+
+describe("rcsMention", () => {
+  it("groups SIREN with the greffe city", () => {
+    const r = rcsMention({ city: "Pau", siren: "404833048" });
+    assert.equal(r.ok, true);
+    assert.equal(r.mention, "RCS Pau 404 833 048");
+    assert.equal(r.siren, "404833048");
+  });
+  it("accepts a SIRET and Paris", () => {
+    const r = rcsMention({ ville: "Paris", siret: "44306184100047" });
+    assert.equal(r.ok, true);
+    assert.equal(r.siren, "443061841");
+    assert.equal(r.mention, "RCS Paris 443 061 841");
+  });
+  it("requires the greffe city", () => {
+    assert.equal(rcsMention({ siren: "404833048" }).ok, false);
   });
 });

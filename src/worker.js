@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -522,6 +522,18 @@ const ROUTES = {
     },
     fn: capitalSocial,
   },
+  "/v1/rcs-mention": {
+    description:
+      "French RCS invoice mention: 'RCS Pau 404 833 048' from greffe city + SIREN/SIRET. Format only, not a Kbis lookup.",
+    tags: ["france", "invoice", "rcs", "greffe", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { city: "Pau", siren: "404833048" } },
+        output: { type: "json", example: { ok: true, mention: "RCS Pau 404 833 048" } },
+      },
+    },
+    fn: rcsMention,
+  },
 };
 
 function llmsTxt(base) {
@@ -619,6 +631,9 @@ JSON: { "phone": "06 12 34 56 78" }
 
 POST ${base}/v1/capital-social
 JSON: { "form": "sas", "amount_eur": 1000 }
+
+POST ${base}/v1/rcs-mention
+JSON: { "city": "Pau", "siren": "404833048" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

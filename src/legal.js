@@ -1404,3 +1404,39 @@ export function capitalSocial(input) {
     note: "Collable mention. Does not prove the capital on the Kbis. Not a legal opinion.",
   };
 }
+
+/** RCS + greffe city collable mention (L441-9 identification). No Kbis lookup. */
+export function rcsMention(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const city = String(i.city || i.ville || i.greffe || "").trim().replace(/\s+/g, " ");
+  if (!city) {
+    return { ok: false, missing: ["city"], error: "city of the greffe (e.g. Pau, Paris)." };
+  }
+  const n = digits(i.siren || i.siret || i.number || i.value);
+  const siren = n.length === 14 ? n.slice(0, 9) : n;
+  if (!SIREN_RE.test(siren)) {
+    return { ok: false, missing: ["siren"], error: "Need siren (9 digits) or siret (14)." };
+  }
+  if (n.length === 14) {
+    const chk = siretOk(n);
+    if (!chk.ok) return { ok: false, siren, error: "SIRET checksum failed." };
+  }
+  const grouped = siren.replace(/(\d{3})(?=\d)/g, "$1 ").trim();
+  const mention = `RCS ${city} ${grouped}`;
+  const raw = String(i.form || i.legal_form || i.kind || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s_-]+/g, "");
+  const form = LEGAL_FORM_ALIAS[raw] || null;
+  return {
+    ok: true,
+    city,
+    siren,
+    grouped,
+    mention,
+    form,
+    source: "C. com. L441-9 / R123-237 (RCS + ville du greffe + SIREN).",
+    note: "Format only. Does not prove the greffe or the immatriculation. Not a Kbis. Not legal advice.",
+  };
+}
