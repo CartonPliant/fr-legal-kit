@@ -2523,3 +2523,41 @@ export function clausePenale(input) {
     note: "Contractual. Distinct from L441-10 statutory late-payment. Not legal advice.",
   };
 }
+
+/** Billing period for continuous services (CGI 289: date of supply / period). */
+export function periode(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const from = parseISODate(i.from || i.start || i.debut);
+  const to = parseISODate(i.to || i.end || i.fin);
+  if (!from) return { ok: false, missing: ["from"], error: "from YYYY-MM-DD." };
+  if (!to) return { ok: false, missing: ["to"], error: "to YYYY-MM-DD." };
+  if (ymd(to) < ymd(from)) return { ok: false, error: "to >= from." };
+  const a = dateFr({ date: ymd(from) }).formatted;
+  const b = dateFr({ date: ymd(to) }).formatted;
+  return {
+    ok: true,
+    from: ymd(from),
+    to: ymd(to),
+    mention: `Période de facturation : du ${a} au ${b}.`,
+    source: "CGI 289 / 242 nonies A (date de la prestation ; période pour les services à exécution continue).",
+    note: "Format only. Does not compute the VAT point of taxation. Not a tax ruling.",
+  };
+}
+
+/** Self-billing (autofacturation). CGI 289: prior agreement + the word Autofacturation on each invoice. */
+export function autofacturation(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const seller = String(i.seller || i.vendeur || i.issuer || "").trim();
+  const agreed = i.agreed !== false;
+  const mention = seller
+    ? `Autofacturation pour le compte de ${seller} (CGI 289).`
+    : "Autofacturation (CGI 289).";
+  return {
+    ok: true,
+    agreed,
+    seller: seller || null,
+    mention,
+    source: "CGI 289 I (autofacturation : accord préalable et mention sur chaque facture).",
+    note: "The seller remains liable for VAT. This is a collable stamp, not the agreement. Not a tax ruling.",
+  };
+}

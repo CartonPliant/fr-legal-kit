@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma, joursFrancs, clausePenale } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma, joursFrancs, clausePenale, periode, autofacturation } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -900,6 +900,30 @@ const ROUTES = {
     },
     fn: clausePenale,
   },
+  "/v1/periode": {
+    description:
+      "French invoice billing period for continuous services (CGI 289): from + to dates as a collable mention.",
+    tags: ["france", "invoice", "periode", "CGI289"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { from: "2026-09-01", to: "2026-09-30" } },
+        output: { type: "json", example: { ok: true } },
+      },
+    },
+    fn: periode,
+  },
+  "/v1/autofacturation": {
+    description:
+      "French self-billing stamp (CGI 289): the word Autofacturation on each invoice. Optional seller name. Prior agreement is the buyer's problem.",
+    tags: ["france", "invoice", "autofacturation", "CGI289"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { seller: "ACME SAS" } },
+        output: { type: "json", example: { ok: true } },
+      },
+    },
+    fn: autofacturation,
+  },
 };
 
 function llmsTxt(base) {
@@ -1090,6 +1114,12 @@ JSON: { "from": "2026-09-07", "days": 8 }
 
 POST ${base}/v1/clause-penale
 JSON: { "amount_eur": 150 }
+
+POST ${base}/v1/periode
+JSON: { "from": "2026-09-01", "to": "2026-09-30" }
+
+POST ${base}/v1/autofacturation
+JSON: { "seller": "ACME SAS" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

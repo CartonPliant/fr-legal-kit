@@ -62,6 +62,8 @@ import {
   proforma,
   joursFrancs,
   clausePenale,
+  periode,
+  autofacturation,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -1019,5 +1021,31 @@ describe("clausePenale", () => {
   it("works without an amount", () => {
     const r = clausePenale({});
     assert.match(r.mention, /indemnité forfaitaire/);
+  });
+});
+
+describe("periode", () => {
+  it("formats September 2026", () => {
+    const r = periode({ from: "2026-09-01", to: "2026-09-30" });
+    assert.equal(r.ok, true);
+    assert.match(r.mention, /01\/09\/2026/);
+    assert.match(r.mention, /30\/09\/2026/);
+  });
+  it("rejects an inverted range", () => {
+    const r = periode({ from: "2026-09-30", to: "2026-09-01" });
+    assert.equal(r.ok, false);
+  });
+});
+
+describe("autofacturation", () => {
+  it("names the seller", () => {
+    const r = autofacturation({ seller: "ACME SAS" });
+    assert.equal(r.ok, true);
+    assert.match(r.mention, /ACME SAS/);
+    assert.match(r.mention, /CGI 289/);
+  });
+  it("works without a seller name", () => {
+    const r = autofacturation({});
+    assert.equal(r.mention, "Autofacturation (CGI 289).");
   });
 });
