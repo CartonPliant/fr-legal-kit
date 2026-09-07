@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -585,6 +585,18 @@ const ROUTES = {
     },
     fn: dateFr,
   },
+  "/v1/payment-means": {
+    description:
+      "French invoice means-of-payment mention (L441-9): virement, chèque, CB, espèces, prélèvement, LCR. Default virement. Collable string.",
+    tags: ["france", "invoice", "payment", "virement", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { kind: "virement" } },
+        output: { type: "json", example: { ok: true, mention: "Paiement par virement bancaire." } },
+      },
+    },
+    fn: paymentMeans,
+  },
 };
 
 function llmsTxt(base) {
@@ -697,6 +709,9 @@ JSON: { "amount_ttc": 1200, "last_number": "AC-2026-0003" }
 
 POST ${base}/v1/date-fr
 JSON: { "date": "2026-09-07" }
+
+POST ${base}/v1/payment-means
+JSON: { "kind": "virement" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

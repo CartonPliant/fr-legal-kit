@@ -1622,3 +1622,56 @@ export function dateFr(input) {
     note: "Calendar format only. Does not prove the invoice was issued that day. Not legal advice.",
   };
 }
+
+const PAYMENT_MEANS = {
+  virement: { label: "virement bancaire", mention: "Paiement par virement bancaire." },
+  cheque: { label: "chèque", mention: "Paiement par chèque." },
+  cb: { label: "carte bancaire", mention: "Paiement par carte bancaire." },
+  especes: { label: "espèces", mention: "Paiement en espèces." },
+  prelevement: { label: "prélèvement", mention: "Paiement par prélèvement." },
+  lcr: { label: "LCR", mention: "Paiement par lettre de change relevé (LCR)." },
+};
+
+const PAYMENT_MEANS_ALIAS = {
+  virement: "virement",
+  vir: "virement",
+  transfer: "virement",
+  iban: "virement",
+  cheque: "cheque",
+  check: "cheque",
+  cb: "cb",
+  carte: "cb",
+  card: "cb",
+  especes: "especes",
+  cash: "especes",
+  prelevement: "prelevement",
+  sepa: "prelevement",
+  lcr: "lcr",
+};
+
+/** L441-9 means of payment mention. Default virement (B2B usage). */
+export function paymentMeans(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.kind || i.means || i.mode || i.method || "virement")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s_-]+/g, "");
+  const key = PAYMENT_MEANS_ALIAS[raw];
+  if (!key) {
+    return {
+      ok: false,
+      missing: ["kind"],
+      error: "kind: virement|cheque|cb|especes|prelevement|lcr",
+    };
+  }
+  const m = PAYMENT_MEANS[key];
+  return {
+    ok: true,
+    kind: key,
+    label: m.label,
+    mention: m.mention,
+    source: "C. com. L441-9 (modalités de paiement sur la facture).",
+    note: "Collable means-of-payment mention. Does not prove the funds arrived. Not legal advice.",
+  };
+}

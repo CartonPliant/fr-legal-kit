@@ -36,6 +36,7 @@ import {
   escompte,
   acompte,
   dateFr,
+  paymentMeans,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -545,5 +546,22 @@ describe("dateFr", () => {
   });
   it("rejects a non-ISO date", () => {
     assert.equal(dateFr({ date: "07/09/2026" }).ok, false);
+  });
+});
+
+describe("paymentMeans", () => {
+  it("defaults to virement", () => {
+    const r = paymentMeans({});
+    assert.equal(r.ok, true);
+    assert.equal(r.kind, "virement");
+    assert.equal(r.mention, "Paiement par virement bancaire.");
+  });
+  it("accepts chèque with accent", () => {
+    const r = paymentMeans({ kind: "chèque" });
+    assert.equal(r.kind, "cheque");
+    assert.equal(r.mention, "Paiement par chèque.");
+  });
+  it("rejects an unknown means", () => {
+    assert.equal(paymentMeans({ kind: "bitcoin" }).ok, false);
   });
 });
