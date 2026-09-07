@@ -53,6 +53,7 @@ import {
   mediateur,
   delivery,
   line,
+  page,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -864,5 +865,22 @@ describe("line", () => {
   it("works with description only", () => {
     const r = line({ description: "Prestation de conseil" });
     assert.match(r.mention, /Prestation de conseil/);
+  });
+});
+
+describe("page", () => {
+  it("formats page 1 of 2", () => {
+    const r = page({ current: 1, total: 2 });
+    assert.equal(r.ok, true);
+    assert.equal(r.mention, "Page 1/2");
+    assert.equal(r.last, false);
+  });
+  it("marks the last page", () => {
+    const r = page({ current: 2, total: 2 });
+    assert.equal(r.last, true);
+  });
+  it("rejects current above total", () => {
+    const r = page({ current: 3, total: 2 });
+    assert.equal(r.ok, false);
   });
 });

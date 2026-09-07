@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -792,6 +792,18 @@ const ROUTES = {
     },
     fn: line,
   },
+  "/v1/page": {
+    description:
+      "French multi-page invoice footer: Page X/Y. Sequential pages of one invoice (L441-9 numbering is the invoice number, not the page).",
+    tags: ["france", "invoice", "page", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { current: 1, total: 2 } },
+        output: { type: "json", example: { ok: true, mention: "Page 1/2" } },
+      },
+    },
+    fn: page,
+  },
 };
 
 function llmsTxt(base) {
@@ -955,6 +967,9 @@ JSON: { "invoice_date": "2026-09-07", "delivery_date": "2026-09-10" }
 
 POST ${base}/v1/line
 JSON: { "description": "Audit comptable", "qty": 8, "kind": "jour", "unit_ht": 450 }
+
+POST ${base}/v1/page
+JSON: { "current": 1, "total": 2 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

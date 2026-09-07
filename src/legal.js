@@ -2268,3 +2268,23 @@ export function line(input) {
     note: "Format only. Does not compute the line total. Not legal advice.",
   };
 }
+
+/** Multi-page invoice footer: Page X/Y. Sequential pages of one invoice, not a new number. */
+export function page(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const current = Number(i.current ?? i.page ?? i.n ?? 1);
+  const total = Number(i.total ?? i.pages ?? i.of ?? current);
+  if (!Number.isInteger(current) || current < 1) return { ok: false, error: "current integer >= 1." };
+  if (!Number.isInteger(total) || total < 1) return { ok: false, error: "total integer >= 1." };
+  if (current > total) return { ok: false, error: "current <= total." };
+  const mention = `Page ${current}/${total}`;
+  return {
+    ok: true,
+    current,
+    total,
+    last: current === total,
+    mention,
+    source: "C. com. L441-9 (numérotation chronologique unique). Page X/Y is usage for a multi-page invoice, not a new invoice number.",
+    note: "Does not increment the invoice number. Not legal advice.",
+  };
+}
