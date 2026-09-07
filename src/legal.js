@@ -1675,3 +1675,33 @@ export function paymentMeans(input) {
     note: "Collable means-of-payment mention. Does not prove the funds arrived. Not legal advice.",
   };
 }
+
+/** L441-10: late-payment interest starts the calendar day after the due date, without a reminder. */
+export function interestStart(input) {
+  const i = input && typeof input === "object" ? input : {};
+  let due = parseISODate(i.due_date || i.due);
+  if (!due && (i.invoice_date || i.date)) {
+    const d = dueDate({
+      invoice_date: i.invoice_date || i.date,
+      net_days: i.net_days ?? i.days ?? 30,
+    });
+    if (!d.ok) return d;
+    due = parseISODate(d.calendar_due);
+  }
+  if (!due) {
+    return { ok: false, missing: ["due_date"], error: "due_date YYYY-MM-DD (or invoice_date + net_days)." };
+  }
+  const start = addDays(due, 1);
+  const startIso = ymd(start);
+  const fmt = dateFr({ date: startIso });
+  return {
+    ok: true,
+    due_date: ymd(due),
+    interest_starts_on: startIso,
+    formatted: fmt.formatted,
+    weekday: fmt.weekday,
+    mention: `Les pénalités de retard courent de plein droit à compter du ${fmt.formatted}, sans qu'un rappel soit nécessaire (L441-10).`,
+    source: "C. com. L441-10 (intérêts à compter du jour suivant la date de règlement, sans rappel).",
+    note: "Calendar day after the due date. Periods are calendar unless the contract says otherwise. Not legal advice.",
+  };
+}

@@ -37,6 +37,7 @@ import {
   acompte,
   dateFr,
   paymentMeans,
+  interestStart,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -563,5 +564,23 @@ describe("paymentMeans", () => {
   });
   it("rejects an unknown means", () => {
     assert.equal(paymentMeans({ kind: "bitcoin" }).ok, false);
+  });
+});
+
+describe("interestStart", () => {
+  it("starts the calendar day after the due date", () => {
+    const r = interestStart({ due_date: "2026-09-07" });
+    assert.equal(r.ok, true);
+    assert.equal(r.interest_starts_on, "2026-09-08");
+    assert.equal(r.formatted, "08/09/2026");
+    assert.match(r.mention, /L441-10/);
+  });
+  it("accepts invoice_date + net_days", () => {
+    const r = interestStart({ invoice_date: "2026-09-01", net_days: 30 });
+    assert.equal(r.due_date, "2026-10-01");
+    assert.equal(r.interest_starts_on, "2026-10-02");
+  });
+  it("requires a due date", () => {
+    assert.equal(interestStart({}).ok, false);
   });
 });

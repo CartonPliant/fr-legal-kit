@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -597,6 +597,18 @@ const ROUTES = {
     },
     fn: paymentMeans,
   },
+  "/v1/interest-start": {
+    description:
+      "L441-10: calendar day late-payment interest starts (the day after the due date), without a reminder. Accepts due_date or invoice_date + net_days.",
+    tags: ["france", "invoice", "L441-10", "penalties", "due-date"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { due_date: "2026-09-07" } },
+        output: { type: "json", example: { ok: true, interest_starts_on: "2026-09-08" } },
+      },
+    },
+    fn: interestStart,
+  },
 };
 
 function llmsTxt(base) {
@@ -712,6 +724,9 @@ JSON: { "date": "2026-09-07" }
 
 POST ${base}/v1/payment-means
 JSON: { "kind": "virement" }
+
+POST ${base}/v1/interest-start
+JSON: { "due_date": "2026-09-07" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
