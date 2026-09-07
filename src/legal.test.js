@@ -48,6 +48,7 @@ import {
   buyer,
   unit,
   cgv,
+  reservePropriete,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -767,5 +768,23 @@ describe("cgv", () => {
   it("flags when CGV were not communicated", () => {
     const r = cgv({ communicated: false });
     assert.equal(r.communicated, false);
+  });
+});
+
+describe("reservePropriete", () => {
+  it("returns the goods clause", () => {
+    const r = reservePropriete({});
+    assert.equal(r.ok, true);
+    assert.equal(r.applies, true);
+    assert.match(r.mention, /L\.624-16/);
+  });
+  it("names the goods when given", () => {
+    const r = reservePropriete({ marchandises: "matériel informatique" });
+    assert.match(r.mention, /matériel informatique/);
+  });
+  it("does not apply to pure services", () => {
+    const r = reservePropriete({ kind: "services" });
+    assert.equal(r.applies, false);
+    assert.equal(r.mention, null);
   });
 });

@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -729,6 +729,21 @@ const ROUTES = {
     },
     fn: cgv,
   },
+  "/v1/reserve-propriete": {
+    description:
+      "French retention-of-title invoice clause (C. com. L.624-16): goods remain the seller's until full payment. Not for pure services.",
+    tags: ["france", "invoice", "reserve-propriete", "L624-16"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { kind: "goods" } },
+        output: {
+          type: "json",
+          example: { ok: true, applies: true, mention: "Les marchandises restent la propriété du vendeur jusqu'au paiement intégral du prix (C. com. L.624-16)." },
+        },
+      },
+    },
+    fn: reservePropriete,
+  },
 };
 
 function llmsTxt(base) {
@@ -877,6 +892,9 @@ JSON: { "kind": "jour", "qty": 8 }
 
 POST ${base}/v1/cgv
 JSON: { "url": "https://example.com/cgv" }
+
+POST ${base}/v1/reserve-propriete
+JSON: { "kind": "goods" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

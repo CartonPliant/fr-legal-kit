@@ -2068,3 +2068,36 @@ export function cgv(input) {
     note: "A mention on the invoice does not replace prior communication of the CGV. Not legal advice.",
   };
 }
+
+/** Retention-of-title clause (réserve de propriété). Typical goods invoice mention. */
+export function reservePropriete(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.kind || i.subject || "goods")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const isServices = raw === "services" || raw === "prestation" || raw === "prestations";
+  if (isServices) {
+    return {
+      ok: true,
+      kind: "services",
+      applies: false,
+      mention: null,
+      source: "C. com. L.624-16 (réserve de propriété). Aimed at goods, not pure services.",
+      note: "A retention-of-title clause is for corporeal movables. Not legal advice.",
+    };
+  }
+  const goods = String(i.goods || i.marchandises || "").trim();
+  const mention = goods
+    ? `Les marchandises (${goods}) restent la propriété du vendeur jusqu'au paiement intégral du prix (C. com. L.624-16).`
+    : "Les marchandises restent la propriété du vendeur jusqu'au paiement intégral du prix (C. com. L.624-16).";
+  return {
+    ok: true,
+    kind: "goods",
+    applies: true,
+    mention,
+    source: "C. com. L.624-16 (clause de réserve de propriété opposable en procédure collective si écrite et convenue).",
+    note: "Written clause; opposability has extra conditions. Not a legal opinion.",
+  };
+}
