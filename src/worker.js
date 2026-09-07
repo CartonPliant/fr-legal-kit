@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -395,6 +395,18 @@ const ROUTES = {
     },
     fn: htTtc,
   },
+  "/v1/days-late": {
+    description:
+      "Calendar days late from due_date to as_of (L441-10 periods are calendar). Also accepts invoice_date + net_days. Feed days_late into /v1/late-penalties.",
+    tags: ["france", "invoice", "L441-10", "late", "calendar"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { due_date: "2026-09-07", as_of: "2026-09-25" } },
+        output: { type: "json", example: { ok: true, days_late: 18 } },
+      },
+    },
+    fn: daysLate,
+  },
 };
 
 function llmsTxt(base) {
@@ -462,6 +474,9 @@ JSON: { "invoice_date": "2026-09-07" }
 
 POST ${base}/v1/ht-ttc
 JSON: { "amount_ht": 100, "rate": "standard" }
+
+POST ${base}/v1/days-late
+JSON: { "due_date": "2026-09-07", "as_of": "2026-09-25" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

@@ -963,3 +963,37 @@ export function htTtc(input) {
     note: "Indicative CGI rates, 2-decimal rounding. 293 B/exempt is 0%. Not a tax ruling.",
   };
 }
+
+/** Calendar days late from due_date to as_of (L441-10 periods are calendar). */
+export function daysLate(input) {
+  const i = input && typeof input === "object" ? input : {};
+  let due = parseISODate(i.due_date);
+  if (!due && (i.invoice_date || i.date)) {
+    const dd = dueDate({
+      invoice_date: i.invoice_date || i.date,
+      net_days: i.net_days ?? i.days ?? 30,
+      alsace_moselle: i.alsace_moselle,
+    });
+    if (!dd.ok) return dd;
+    due = parseISODate(dd.calendar_due);
+  }
+  const asOf = parseISODate(i.as_of);
+  if (!due) {
+    return { ok: false, missing: ["due_date"], error: "due_date YYYY-MM-DD, or invoice_date + net_days." };
+  }
+  if (!asOf) {
+    return { ok: false, missing: ["as_of"], error: "as_of YYYY-MM-DD required (no server clock)." };
+  }
+  const calendar_days = Math.round((asOf - due) / 86400000);
+  return {
+    ok: true,
+    due_date: ymd(due),
+    as_of: ymd(asOf),
+    calendar_days,
+    days_late: Math.max(0, calendar_days),
+    not_yet_due: calendar_days < 0,
+    due_today: calendar_days === 0,
+    source: "C. com. L441-10 delays are calendar days unless the contract says otherwise.",
+    note: "Feed days_late into /v1/late-penalties. Not legal advice.",
+  };
+}

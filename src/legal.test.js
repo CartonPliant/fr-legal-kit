@@ -21,6 +21,7 @@ import {
   alsaceHolidays,
   dueDateEom,
   htTtc,
+  daysLate,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -292,5 +293,20 @@ describe("htTtc", () => {
     const r = htTtc({ amount_ht: 100, rate: "reduced" });
     assert.equal(r.rate_pct, 5.5);
     assert.equal(r.amount_ttc, 105.5);
+  });
+});
+
+describe("daysLate", () => {
+  it("counts 18 calendar days after the due date", () => {
+    const r = daysLate({ due_date: "2026-09-07", as_of: "2026-09-25" });
+    assert.equal(r.ok, true);
+    assert.equal(r.days_late, 18);
+    assert.equal(r.not_yet_due, false);
+  });
+  it("is zero on the due date and negative before", () => {
+    assert.equal(daysLate({ due_date: "2026-09-07", as_of: "2026-09-07" }).days_late, 0);
+    const early = daysLate({ due_date: "2026-09-07", as_of: "2026-09-01" });
+    assert.equal(early.days_late, 0);
+    assert.equal(early.not_yet_due, true);
   });
 });
