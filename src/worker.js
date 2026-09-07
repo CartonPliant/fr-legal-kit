@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -290,6 +290,21 @@ const ROUTES = {
     },
     fn: penaltyText,
   },
+  "/v1/franchise-293b": {
+    description:
+      "CGI 293 B franchise-en-base 2026 thresholds (services 37 500/41 250, goods 85 000/93 500) plus the statutory invoice mention. 25 000 € unique threshold was abandoned. Not a tax ruling.",
+    tags: ["france", "tva", "293B", "franchise", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { activity: "services", ca_n1_eur: 20000 } },
+        output: {
+          type: "json",
+          example: { ok: true, status: "franchise", mention: "TVA non applicable, art. 293 B du CGI" },
+        },
+      },
+    },
+    fn: franchise293b,
+  },
 };
 
 function llmsTxt(base) {
@@ -332,6 +347,9 @@ JSON: { "siren": "404833048" }
 
 POST ${base}/v1/penalty-text
 JSON: { "bce_refi_pct": 2.4 }
+
+POST ${base}/v1/franchise-293b
+JSON: { "activity": "services"|"goods"|"lawyers"|"authors", "ca_n1_eur": 20000, "ca_n_eur": 18000 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
@@ -571,7 +589,7 @@ export default {
     if (path === "/" && req.method === "GET") {
       return json({
         name: SERVICE,
-        paid: "POST /v1/* — $0.01 USDC Base x402 (einvoice-who, late-penalties, due-date, holidays, payment-term-max, mention-fields, vat-key, penalty-text, tva-rate, check-siret, check-iban)",
+        paid: "POST /v1/* — $0.01 USDC Base x402 (einvoice-who, late-penalties, due-date, holidays, payment-term-max, mention-fields, vat-key, penalty-text, franchise-293b, tva-rate, check-siret, check-iban)",
         mcp: "POST /mcp",
         docs: "/llms.txt",
         x402: "/.well-known/x402.json",

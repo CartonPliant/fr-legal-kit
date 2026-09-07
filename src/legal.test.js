@@ -13,6 +13,7 @@ import {
   mentionFields,
   vatKey,
   penaltyText,
+  franchise293b,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -158,5 +159,25 @@ describe("penaltyText", () => {
     assert.equal(r.indemnity_eur, 40);
     assert.match(r.mentions.late_penalties, /12,40/);
     assert.match(r.mentions.indemnity, /40 €/);
+  });
+});
+
+describe("franchise293b", () => {
+  it("returns 2026 service thresholds and the statutory mention", () => {
+    const r = franchise293b({ activity: "services" });
+    assert.equal(r.ok, true);
+    assert.equal(r.thresholds.base_eur, 37500);
+    assert.equal(r.thresholds.major_eur, 41250);
+    assert.equal(r.mention, "TVA non applicable, art. 293 B du CGI");
+  });
+  it("goods 85 000 / 93 500 and franchise when CA N-1 under base", () => {
+    const r = franchise293b({ activity: "goods", ca_n1_eur: 80000 });
+    assert.equal(r.thresholds.base_eur, 85000);
+    assert.equal(r.thresholds.major_eur, 93500);
+    assert.equal(r.status, "franchise");
+  });
+  it("exit_immediate when CA N exceeds majoré", () => {
+    const r = franchise293b({ activity: "services", ca_n_eur: 42000 });
+    assert.equal(r.status, "exit_immediate");
   });
 });

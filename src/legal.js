@@ -426,6 +426,108 @@ export function penaltyText(input) {
   };
 }
 
+/**
+ * CGI 293 B franchise-en-base thresholds for calendar 2026 (= 2025 figures).
+ * The LF 2025 unique 25 000 € threshold was abandoned (loi 3 nov. 2025).
+ */
+export const FRANCHISE_293B_2026 = {
+  goods: {
+    label: "Ventes de marchandises, restauration, hébergement",
+    base_eur: 85000,
+    major_eur: 93500,
+  },
+  services: {
+    label: "Prestations de services / professions libérales (hors avocats)",
+    base_eur: 37500,
+    major_eur: 41250,
+  },
+  lawyers: {
+    label: "Avocats — activités réglementées",
+    base_eur: 50000,
+    major_eur: 55000,
+  },
+  authors: {
+    label: "Auteurs et artistes-interprètes — cession de droits",
+    base_eur: 50000,
+    major_eur: 55000,
+  },
+};
+
+const FRANCHISE_ALIAS = {
+  services: "services",
+  service: "services",
+  prestation: "services",
+  liberal: "services",
+  bnc: "services",
+  goods: "goods",
+  ventes: "goods",
+  commerce: "goods",
+  hebergement: "goods",
+  bic: "goods",
+  lawyers: "lawyers",
+  avocat: "lawyers",
+  avocats: "lawyers",
+  authors: "authors",
+  auteur: "authors",
+  artistes: "authors",
+};
+
+export function franchise293b(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.activity || i.kind || "services")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const key = FRANCHISE_ALIAS[raw];
+  if (!key) {
+    return {
+      ok: false,
+      missing: ["activity"],
+      error: "activity: services|goods|lawyers|authors",
+    };
+  }
+  const t = FRANCHISE_293B_2026[key];
+  const n1 = i.ca_n1_eur === undefined || i.ca_n1_eur === null || i.ca_n1_eur === "" ? null : Number(i.ca_n1_eur);
+  const n = i.ca_n_eur === undefined || i.ca_n_eur === null || i.ca_n_eur === "" ? null : Number(i.ca_n_eur);
+  if (n1 !== null && !Number.isFinite(n1)) {
+    return { ok: false, missing: ["ca_n1_eur"], error: "ca_n1_eur must be a number (EUR HT)." };
+  }
+  if (n !== null && !Number.isFinite(n)) {
+    return { ok: false, missing: ["ca_n_eur"], error: "ca_n_eur must be a number (EUR HT)." };
+  }
+  let status = "unknown";
+  let detail = "Pass ca_n1_eur and/or ca_n_eur (EUR HT) for a heuristic.";
+  if (n !== null && n > t.major_eur) {
+    status = "exit_immediate";
+    detail = "CA N above majoré: indicative exit from the 1st day of the month of exceedance.";
+  } else if (n1 !== null && n1 > t.major_eur) {
+    status = "out";
+    detail = "CA N-1 above majoré: not in franchise for year N.";
+  } else if (n1 !== null && n1 > t.base_eur) {
+    status = "keep_until_31_dec";
+    detail = "CA N-1 between base and majoré: typically keep franchise until 31 Dec of that year, then TVA on 1 Jan.";
+  } else if (n1 !== null && n1 <= t.base_eur) {
+    status = "franchise";
+    detail = "CA N-1 at or under base: franchise for year N while CA N stays at or under majoré.";
+  }
+  return {
+    ok: true,
+    year: 2026,
+    activity: key,
+    thresholds: t,
+    ca_n1_eur: n1,
+    ca_n_eur: n,
+    status,
+    detail,
+    mention: "TVA non applicable, art. 293 B du CGI",
+    abandoned_25000:
+      "The unique 25 000 € threshold from LF 2025 was abandoned (loi 3 nov. 2025). 2026 keeps 2025 figures.",
+    source:
+      "CGI art. 293 B. 2026 = 2025: services 37 500 / 41 250; goods 85 000 / 93 500; lawyers/authors (regulated/rights) 50 000 / 55 000.",
+    note: "Indicative table. Mixed activities and creation-year prorata are out of scope. Not a tax ruling.",
+  };
+}
+
 /** Statutory ceiling on agreed B2B payment terms (L441-10 I). */
 export function paymentTermMax(input) {
   const i = input && typeof input === "object" ? input : {};
