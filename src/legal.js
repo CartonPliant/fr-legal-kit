@@ -2660,3 +2660,50 @@ export function debours(input) {
     note: "Must be paid in the client's name with proof. Not a tax ruling.",
   };
 }
+
+/** Arrhes (C. civ. 1590), distinct from acompte: each party may withdraw (buyer loses, seller returns double). */
+export function arrhes(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = i.amount_eur ?? i.amount ?? i.montant;
+  if (raw === undefined || raw === null || raw === "") {
+    return { ok: false, missing: ["amount_eur"], error: "amount_eur of the arrhes." };
+  }
+  const amount = Number(String(raw).replace(/\s/g, "").replace(",", "."));
+  if (!Number.isFinite(amount) || amount <= 0) return { ok: false, error: "amount_eur > 0." };
+  const double = round2(amount * 2);
+  return {
+    ok: true,
+    amount_eur: round2(amount),
+    seller_restitution: double,
+    mention: `Arrhes : ${formatEurFr(round2(amount))} (C. civ. 1590). En cas de dédit, l'acheteur les perd ; le vendeur restitue le double (${formatEurFr(double)}). Distinct d'un acompte.`,
+    source: "C. civ. 1590 (arrhes). Distinct from acompte (first payment on the price).",
+    note: "If the contract is silent, a deposit is presumed arrhes (C. civ. 1590). Not legal advice.",
+  };
+}
+
+/** Calendar prorata of a monthly amount over an inclusive from/to window. */
+export function prorata(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const from = parseISODate(i.from || i.start || i.debut);
+  const to = parseISODate(i.to || i.end || i.fin);
+  const monthly = Number(String(i.monthly_ht ?? i.amount_ht ?? i.montant ?? "").replace(/\s/g, "").replace(",", "."));
+  if (!from) return { ok: false, missing: ["from"], error: "from YYYY-MM-DD." };
+  if (!to) return { ok: false, missing: ["to"], error: "to YYYY-MM-DD." };
+  if (ymd(to) < ymd(from)) return { ok: false, error: "to >= from." };
+  if (!Number.isFinite(monthly) || monthly < 0) return { ok: false, missing: ["monthly_ht"], error: "monthly_ht >= 0." };
+  const days = Math.round((to.getTime() - from.getTime()) / 86400000) + 1;
+  const dim = endOfMonth(from).getUTCDate();
+  const amount_ht = round2((monthly * days) / dim);
+  return {
+    ok: true,
+    from: ymd(from),
+    to: ymd(to),
+    days,
+    days_in_month: dim,
+    monthly_ht: round2(monthly),
+    amount_ht,
+    mention: `Prorata ${days}/${dim} : ${formatEurFr(amount_ht)} HT.`,
+    source: "Calendar prorata (inclusive days / days in the start month). Usage, not a statutory formula.",
+    note: "Does not apply VAT. Civil month of `from`. Not legal advice.",
+  };
+}

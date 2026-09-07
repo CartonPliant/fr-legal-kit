@@ -72,6 +72,8 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/langue` | French language mention (Toubon B2C / tax-control B2B) |
 | `/v1/commande` | Purchase-order number (+ optional date) on the invoice |
 | `/v1/debours` | Disbursements out of the VAT base (CGI 267) |
+| `/v1/arrhes` | Arrhes (C. civ. 1590), distinct from acompte — seller returns double |
+| `/v1/prorata` | Calendar prorata of a monthly HT over from/to |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

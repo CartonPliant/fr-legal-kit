@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma, joursFrancs, clausePenale, periode, autofacturation, rgpd, langue, commande, debours } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma, joursFrancs, clausePenale, periode, autofacturation, rgpd, langue, commande, debours, arrhes, prorata } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -972,6 +972,30 @@ const ROUTES = {
     },
     fn: debours,
   },
+  "/v1/arrhes": {
+    description:
+      "French arrhes (C. civ. 1590), distinct from acompte: buyer forfeits, seller returns double. Requires amount_eur.",
+    tags: ["france", "contrat", "arrhes", "1590", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { amount_eur: 200 } },
+        output: { type: "json", example: { ok: true, seller_restitution: 400 } },
+      },
+    },
+    fn: arrhes,
+  },
+  "/v1/prorata": {
+    description:
+      "Calendar prorata of a monthly HT amount over an inclusive from/to window (days / days in the start month).",
+    tags: ["france", "invoice", "prorata", "calendar"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { from: "2026-09-01", to: "2026-09-10", monthly_ht: 1000 } },
+        output: { type: "json", example: { ok: true, amount_ht: 333.33 } },
+      },
+    },
+    fn: prorata,
+  },
 };
 
 function llmsTxt(base) {
@@ -1180,6 +1204,12 @@ JSON: { "number": "BC-42", "date": "2026-09-01" }
 
 POST ${base}/v1/debours
 JSON: { "amount_eur": 80, "label": "timbre fiscal" }
+
+POST ${base}/v1/arrhes
+JSON: { "amount_eur": 200 }
+
+POST ${base}/v1/prorata
+JSON: { "from": "2026-09-01", "to": "2026-09-10", "monthly_ht": 1000 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

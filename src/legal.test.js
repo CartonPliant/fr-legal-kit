@@ -68,6 +68,8 @@ import {
   langue,
   commande,
   debours,
+  arrhes,
+  prorata,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -1103,5 +1105,32 @@ describe("debours", () => {
   it("works without an amount", () => {
     const r = debours({});
     assert.match(r.mention, /CGI 267/);
+  });
+});
+
+describe("arrhes", () => {
+  it("doubles the amount if the seller withdraws", () => {
+    const r = arrhes({ amount_eur: 200 });
+    assert.equal(r.ok, true);
+    assert.equal(r.seller_restitution, 400);
+    assert.match(r.mention, /1590/);
+  });
+  it("requires an amount", () => {
+    const r = arrhes({});
+    assert.equal(r.ok, false);
+  });
+});
+
+describe("prorata", () => {
+  it("takes 10 of 30 days in September 2026", () => {
+    const r = prorata({ from: "2026-09-01", to: "2026-09-10", monthly_ht: 1000 });
+    assert.equal(r.ok, true);
+    assert.equal(r.days, 10);
+    assert.equal(r.days_in_month, 30);
+    assert.equal(r.amount_ht, 333.33);
+  });
+  it("rejects an inverted range", () => {
+    const r = prorata({ from: "2026-09-10", to: "2026-09-01", monthly_ht: 1000 });
+    assert.equal(r.ok, false);
   });
 });
