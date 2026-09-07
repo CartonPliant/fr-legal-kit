@@ -60,6 +60,8 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/page` | Multi-page invoice footer: Page X/Y |
 | `/v1/retractation` | 14-day consumer withdrawal (L.221-18). B2C distance/off-premises |
 | `/v1/conservation` | Keep the invoice 10 years (L123-22) / 6 years tax (LPF L102 B) |
+| `/v1/prescription` | Payment action: 5 years B2B (L110-4) or 2 years B2C (L.218-2) |
+| `/v1/garantie-commerciale` | Commercial warranty (L.217-21), distinct from the 2-year legal one |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

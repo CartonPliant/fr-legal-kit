@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -828,6 +828,30 @@ const ROUTES = {
     },
     fn: conservation,
   },
+  "/v1/prescription": {
+    description:
+      "French limitation period for an unpaid invoice: 5 years B2B (C. com. L110-4) or 2 years against a consumer (C. conso L.218-2), from the due date.",
+    tags: ["france", "invoice", "prescription", "L110-4", "L218-2"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { due_date: "2026-09-07", buyer: "b2b" } },
+        output: { type: "json", example: { ok: true, expires_on: "2031-09-07" } },
+      },
+    },
+    fn: prescription,
+  },
+  "/v1/garantie-commerciale": {
+    description:
+      "French commercial warranty mention (C. conso L.217-21), distinct from the 2-year legal warranty. Optional months + delivery_date → expiry.",
+    tags: ["france", "conso", "garantie", "L217-21", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { months: 12, delivery_date: "2026-09-07" } },
+        output: { type: "json", example: { ok: true, expires_on: "2027-09-07" } },
+      },
+    },
+    fn: garantieCommerciale,
+  },
 };
 
 function llmsTxt(base) {
@@ -1000,6 +1024,12 @@ JSON: { "contract_date": "2026-09-07", "kind": "services" }
 
 POST ${base}/v1/conservation
 JSON: { "invoice_date": "2026-09-07" }
+
+POST ${base}/v1/prescription
+JSON: { "due_date": "2026-09-07", "buyer": "b2b" }
+
+POST ${base}/v1/garantie-commerciale
+JSON: { "months": 12, "delivery_date": "2026-09-07" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

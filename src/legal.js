@@ -2360,3 +2360,69 @@ export function conservation(input) {
     note: "Calendar add, not fiscal year-end. Electronic invoices have the same duration. Not legal advice.",
   };
 }
+
+/** Action for unpaid invoices: 5 years B2B (C. com. L110-4) or 2 years B2C (C. conso L.218-2). */
+export function prescription(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const due = parseISODate(i.due_date || i.date || i.from);
+  if (!due) return { ok: false, missing: ["due_date"], error: "due_date YYYY-MM-DD." };
+  const raw = String(i.buyer || i.kind || i.audience || "b2b")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const b2c = raw === "b2c" || raw === "consommateur" || raw === "conso";
+  const years = b2c ? 2 : 5;
+  const e = new Date(due.getTime());
+  e.setUTCFullYear(e.getUTCFullYear() + years);
+  const expires_on = ymd(e);
+  const formatted = dateFr({ date: expires_on }).formatted;
+  const article = b2c ? "C. conso L.218-2" : "C. com. L110-4";
+  return {
+    ok: true,
+    buyer: b2c ? "b2c" : "b2b",
+    years,
+    due_date: ymd(due),
+    expires_on,
+    mention: `Prescription de l'action en paiement : ${years} ans à compter de l'échéance (jusqu'au ${formatted}) (${article}).`,
+    source: b2c
+      ? "C. conso L.218-2 (2 ans, action du professionnel contre le consommateur)."
+      : "C. com. L110-4 (5 ans entre commerçants / obligations commerciales).",
+    note: "Calendar add from due date. Interruption/suspension not modelled. Not legal advice.",
+  };
+}
+
+/** Commercial warranty (garantie commerciale), distinct from the 2-year legal warranty. */
+export function garantieCommerciale(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const monthsRaw = i.months ?? i.duration_months ?? i.duree_mois;
+  let months = null;
+  if (monthsRaw !== undefined && monthsRaw !== null && monthsRaw !== "") {
+    months = Number(monthsRaw);
+    if (!Number.isInteger(months) || months < 1) return { ok: false, error: "months integer >= 1." };
+  }
+  const delivery = parseISODate(i.delivery_date || i.delivered_on || i.date);
+  let expires_on = null;
+  if (months && delivery) {
+    const e = new Date(delivery.getTime());
+    e.setUTCMonth(e.getUTCMonth() + months);
+    expires_on = ymd(e);
+  }
+  let mention;
+  if (expires_on) {
+    mention = `Garantie commerciale : ${months} mois à compter de la délivrance (jusqu'au ${dateFr({ date: expires_on }).formatted}), distincte de la garantie légale de conformité (C. conso L.217-21).`;
+  } else if (months) {
+    mention = `Garantie commerciale : ${months} mois à compter de la délivrance, distincte de la garantie légale de conformité (C. conso L.217-21).`;
+  } else {
+    mention =
+      "Toute garantie commerciale est distincte de la garantie légale de conformité de 2 ans (C. conso L.217-21).";
+  }
+  return {
+    ok: true,
+    months,
+    expires_on,
+    mention,
+    source: "C. conso L.217-21 (garantie commerciale ; ne se substitue pas à L.217-3).",
+    note: "Contractual extra. Does not replace the legal warranty. Not legal advice.",
+  };
+}

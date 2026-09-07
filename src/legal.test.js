@@ -56,6 +56,8 @@ import {
   page,
   retractation,
   conservation,
+  prescription,
+  garantieCommerciale,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -916,5 +918,39 @@ describe("conservation", () => {
   it("requires an invoice date", () => {
     const r = conservation({});
     assert.equal(r.ok, false);
+  });
+});
+
+describe("prescription", () => {
+  it("is 5 years for a B2B due date", () => {
+    const r = prescription({ due_date: "2026-09-07", buyer: "b2b" });
+    assert.equal(r.ok, true);
+    assert.equal(r.years, 5);
+    assert.equal(r.expires_on, "2031-09-07");
+    assert.match(r.mention, /L110-4/);
+  });
+  it("is 2 years against a consumer", () => {
+    const r = prescription({ due_date: "2026-09-07", buyer: "b2c" });
+    assert.equal(r.years, 2);
+    assert.equal(r.expires_on, "2028-09-07");
+    assert.match(r.mention, /L\.218-2/);
+  });
+  it("requires a due date", () => {
+    const r = prescription({});
+    assert.equal(r.ok, false);
+  });
+});
+
+describe("garantieCommerciale", () => {
+  it("adds 12 months from delivery", () => {
+    const r = garantieCommerciale({ months: 12, delivery_date: "2026-09-07" });
+    assert.equal(r.ok, true);
+    assert.equal(r.expires_on, "2027-09-07");
+    assert.match(r.mention, /L\.217-21/);
+  });
+  it("works without a duration", () => {
+    const r = garantieCommerciale({});
+    assert.equal(r.months, null);
+    assert.match(r.mention, /distincte/);
   });
 });
