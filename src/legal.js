@@ -912,3 +912,54 @@ export function tvaRate(input) {
     note: "Indicative metropolitan rates. 293 B is a franchise, not a 0% rate. Not a tax ruling.",
   };
 }
+
+function round2(n) {
+  return Math.round(n * 100) / 100;
+}
+
+/** HT ↔ TTC using the indicative CGI rate table. */
+export function htTtc(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const rateInfo = tvaRate({ rate: i.rate || i.category || i.kind || "standard" });
+  if (!rateInfo.ok) return rateInfo;
+  const pct = rateInfo.rate_pct;
+  const htIn = i.amount_ht ?? i.ht;
+  const ttcIn = i.amount_ttc ?? i.ttc;
+  const hasHt = htIn !== undefined && htIn !== null && htIn !== "";
+  const hasTtc = ttcIn !== undefined && ttcIn !== null && ttcIn !== "";
+  if (hasHt === hasTtc) {
+    return { ok: false, missing: ["amount_ht"], error: "Pass exactly one of amount_ht or amount_ttc." };
+  }
+  if (hasHt) {
+    const ht = Number(htIn);
+    if (!Number.isFinite(ht) || ht < 0) return { ok: false, error: "amount_ht >= 0." };
+    const vat = round2(ht * (pct / 100));
+    return {
+      ok: true,
+      direction: "ht_to_ttc",
+      amount_ht: round2(ht),
+      vat,
+      amount_ttc: round2(ht + vat),
+      category: rateInfo.category,
+      rate_pct: pct,
+      cgi: rateInfo.cgi,
+      source: rateInfo.cgi,
+      note: "Indicative CGI rates, 2-decimal rounding. 293 B/exempt is 0%. Not a tax ruling.",
+    };
+  }
+  const ttc = Number(ttcIn);
+  if (!Number.isFinite(ttc) || ttc < 0) return { ok: false, error: "amount_ttc >= 0." };
+  const ht = pct === 0 ? round2(ttc) : round2(ttc / (1 + pct / 100));
+  return {
+    ok: true,
+    direction: "ttc_to_ht",
+    amount_ht: ht,
+    vat: round2(ttc - ht),
+    amount_ttc: round2(ttc),
+    category: rateInfo.category,
+    rate_pct: pct,
+    cgi: rateInfo.cgi,
+    source: rateInfo.cgi,
+    note: "Indicative CGI rates, 2-decimal rounding. 293 B/exempt is 0%. Not a tax ruling.",
+  };
+}

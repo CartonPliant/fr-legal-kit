@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -383,6 +383,18 @@ const ROUTES = {
     },
     fn: dueDateEom,
   },
+  "/v1/ht-ttc": {
+    description:
+      "French HT ↔ TTC using CGI indicative rates (20 / 10 / 5.5 / 2.1 / 0). Pass exactly one of amount_ht or amount_ttc. Not a tax ruling.",
+    tags: ["france", "tva", "invoice", "ht", "ttc"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { amount_ht: 100, rate: "standard" } },
+        output: { type: "json", example: { ok: true, vat: 20, amount_ttc: 120 } },
+      },
+    },
+    fn: htTtc,
+  },
 };
 
 function llmsTxt(base) {
@@ -447,6 +459,9 @@ JSON: { "year": 2026 }
 
 POST ${base}/v1/due-date-eom
 JSON: { "invoice_date": "2026-09-07" }
+
+POST ${base}/v1/ht-ttc
+JSON: { "amount_ht": 100, "rate": "standard" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

@@ -20,6 +20,7 @@ import {
   amountWords,
   alsaceHolidays,
   dueDateEom,
+  htTtc,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -274,5 +275,22 @@ describe("dueDateEom", () => {
     assert.equal(r.month_end, "2026-09-30");
     assert.equal(r.statutory_45_eom.due, "2026-11-14");
     assert.equal(r.usage_45_then_eom.due, "2026-10-31");
+  });
+});
+
+describe("htTtc", () => {
+  it("adds 20% from HT and reverses from TTC", () => {
+    const up = htTtc({ amount_ht: 100, rate: "standard" });
+    assert.equal(up.ok, true);
+    assert.equal(up.vat, 20);
+    assert.equal(up.amount_ttc, 120);
+    const down = htTtc({ amount_ttc: 120, rate: "standard" });
+    assert.equal(down.amount_ht, 100);
+    assert.equal(down.vat, 20);
+  });
+  it("uses 5.5% reduced", () => {
+    const r = htTtc({ amount_ht: 100, rate: "reduced" });
+    assert.equal(r.rate_pct, 5.5);
+    assert.equal(r.amount_ttc, 105.5);
   });
 });
