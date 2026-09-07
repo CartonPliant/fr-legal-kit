@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -510,6 +510,18 @@ const ROUTES = {
     },
     fn: phoneFr,
   },
+  "/v1/capital-social": {
+    description:
+      "French share-capital invoice mention for sociétés (SAS/SARL/SA/SCI): 'au capital de 1 000,00 €', optional variable capital. EI/micro have no capital. Format only, not a Kbis.",
+    tags: ["france", "invoice", "capital", "sas", "sarl", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { form: "sas", amount_eur: 1000 } },
+        output: { type: "json", example: { ok: true, mention: "SAS au capital de 1 000,00 €" } },
+      },
+    },
+    fn: capitalSocial,
+  },
 };
 
 function llmsTxt(base) {
@@ -604,6 +616,9 @@ JSON: { "original_number": "F-2026-0042", "last_avoir": "AV-2026-0007", "amount_
 
 POST ${base}/v1/phone-fr
 JSON: { "phone": "06 12 34 56 78" }
+
+POST ${base}/v1/capital-social
+JSON: { "form": "sas", "amount_eur": 1000 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

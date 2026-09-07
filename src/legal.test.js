@@ -30,6 +30,7 @@ import {
   ibanFr,
   creditNote,
   phoneFr,
+  capitalSocial,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -428,5 +429,25 @@ describe("phoneFr", () => {
   });
   it("rejects a short number", () => {
     assert.equal(phoneFr({ phone: "123" }).ok, false);
+  });
+});
+
+describe("capitalSocial", () => {
+  it("formats SAS 1000 €", () => {
+    const r = capitalSocial({ form: "sas", amount_eur: 1000 });
+    assert.equal(r.ok, true);
+    assert.equal(r.mention, "SAS au capital de 1 000,00 €");
+    assert.equal(r.is_societe, true);
+  });
+  it("skips capital for micro", () => {
+    const r = capitalSocial({ form: "micro", amount_eur: 1 });
+    assert.equal(r.ok, true);
+    assert.equal(r.mention, null);
+    assert.equal(r.is_societe, false);
+  });
+  it("formats variable capital with a minimum", () => {
+    const r = capitalSocial({ form: "sas", amount_eur: 10000, variable: true, min_eur: 1 });
+    assert.match(r.mention, /capital variable/);
+    assert.match(r.mention, /minimum 1,00 €/);
   });
 });

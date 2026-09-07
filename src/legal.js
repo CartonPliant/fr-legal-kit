@@ -1340,3 +1340,67 @@ export function phoneFr(input) {
     note: "Does not prove the line exists or is assigned. Not a lookup. Not legal advice.",
   };
 }
+
+function formatEurFr(n) {
+  const x = round2(n);
+  const [int, dec] = x.toFixed(2).split(".");
+  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `${grouped},${dec} €`;
+}
+
+/** Invoice mention for share capital (sociétés). Format only — not a Kbis. */
+export function capitalSocial(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.form || i.legal_form || i.kind || "sas")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s_-]+/g, "");
+  const form = LEGAL_FORM_ALIAS[raw];
+  if (!form) {
+    return { ok: false, missing: ["form"], error: "form: ei|micro|eurl|sarl|sas|sasu|sa|sci" };
+  }
+  if (form === "ei" || form === "micro") {
+    return {
+      ok: true,
+      form,
+      is_societe: false,
+      mention: null,
+      note: "EI / micro : pas de capital social. Use /v1/legal-form for EI quality + 293 B.",
+      source: "C. com. L441-9 identification mentions (capital for sociétés only).",
+    };
+  }
+  const amount = i.amount_eur ?? i.capital ?? i.amount ?? i.capital_eur;
+  if (amount === undefined || amount === null || amount === "") {
+    return { ok: false, missing: ["amount_eur"], error: "amount_eur of the share capital." };
+  }
+  const n = Number(amount);
+  if (!Number.isFinite(n) || n < 0) return { ok: false, error: "amount_eur >= 0." };
+  const variable = Boolean(i.variable);
+  const labels = { eurl: "EURL", sarl: "SARL", sas: "SAS", sasu: "SASU", sa: "SA", sci: "SCI" };
+  const label = labels[form];
+  const formatted = formatEurFr(n);
+  let mention;
+  if (variable) {
+    const minRaw = i.min_eur ?? i.minimum ?? i.capital_min;
+    const min = minRaw === undefined || minRaw === null || minRaw === "" ? null : Number(minRaw);
+    if (min != null && (!Number.isFinite(min) || min < 0)) return { ok: false, error: "min_eur >= 0." };
+    mention =
+      min != null
+        ? `${label} au capital variable de ${formatted} (minimum ${formatEurFr(min)})`
+        : `${label} au capital variable de ${formatted}`;
+  } else {
+    mention = `${label} au capital de ${formatted}`;
+  }
+  return {
+    ok: true,
+    form,
+    is_societe: true,
+    amount_eur: round2(n),
+    formatted,
+    variable,
+    mention,
+    source: "C. com. L441-9 / identification of sociétés (montant du capital social).",
+    note: "Collable mention. Does not prove the capital on the Kbis. Not a legal opinion.",
+  };
+}
