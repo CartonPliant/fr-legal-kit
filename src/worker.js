@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -756,6 +756,18 @@ const ROUTES = {
     },
     fn: garantieLegale,
   },
+  "/v1/mediateur": {
+    description:
+      "French consumer mediator mention (C. conso L.612-1). Required for B2C. Pass name + url of the designated mediator. Does not apply to professional buyers.",
+    tags: ["france", "conso", "mediateur", "L612-1", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { name: "CNPM", url: "https://www.cnpm-mediation-consommation.eu" } },
+        output: { type: "json", example: { ok: true, applies: true } },
+      },
+    },
+    fn: mediateur,
+  },
 };
 
 function llmsTxt(base) {
@@ -910,6 +922,9 @@ JSON: { "kind": "goods" }
 
 POST ${base}/v1/garantie-legale
 JSON: { "delivery_date": "2026-09-07" }
+
+POST ${base}/v1/mediateur
+JSON: { "name": "CNPM", "url": "https://www.cnpm-mediation-consommation.eu" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

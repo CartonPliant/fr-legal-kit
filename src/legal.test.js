@@ -50,6 +50,7 @@ import {
   cgv,
   reservePropriete,
   garantieLegale,
+  mediateur,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -806,5 +807,23 @@ describe("garantieLegale", () => {
     const r = garantieLegale({});
     assert.equal(r.duration_years, 2);
     assert.equal(r.expires_on, null);
+  });
+});
+
+describe("mediateur", () => {
+  it("formats name and site for a consumer", () => {
+    const r = mediateur({ name: "CNPM", url: "https://www.cnpm-mediation-consommation.eu" });
+    assert.equal(r.ok, true);
+    assert.equal(r.applies, true);
+    assert.match(r.mention, /CNPM/);
+    assert.match(r.mention, /L\.612-1/);
+  });
+  it("does not apply to a professional buyer", () => {
+    const r = mediateur({ buyer: "b2b" });
+    assert.equal(r.applies, false);
+  });
+  it("returns a generic reminder without coordinates", () => {
+    const r = mediateur({});
+    assert.match(r.mention, /médiateur/);
   });
 });

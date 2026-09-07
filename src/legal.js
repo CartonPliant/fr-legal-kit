@@ -2143,3 +2143,42 @@ export function garantieLegale(input) {
     note: "Consumer goods. Hidden defects (C. civ. 1641) may also apply. Not legal advice.",
   };
 }
+
+/** Consumer mediator mention (C. conso L.612-1). Required for B2C professionals. */
+export function mediateur(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.buyer || i.audience || i.kind || "b2c")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const b2b = raw === "b2b" || raw === "professionnel";
+  if (b2b) {
+    return {
+      ok: true,
+      applies: false,
+      mention: "Médiation de la consommation (C. conso L.612-1) : ne s'applique pas à un acheteur professionnel.",
+      source: "C. conso L.612-1 (médiateur de la consommation, consommateur).",
+      note: "B2B commercial mediation is optional. Not legal advice.",
+    };
+  }
+  const name = String(i.name || i.mediateur || "").trim();
+  const url = String(i.url || i.site || "").trim();
+  let mention;
+  if (name && url) mention = `Médiateur de la consommation : ${name}. Site : ${url} (C. conso L.612-1).`;
+  else if (name) mention = `Médiateur de la consommation : ${name} (C. conso L.612-1).`;
+  else if (url) mention = `Médiateur de la consommation : ${url} (C. conso L.612-1).`;
+  else {
+    mention =
+      "En cas de litige, le consommateur peut recourir au médiateur de la consommation dont les coordonnées figurent sur nos supports (C. conso L.612-1).";
+  }
+  return {
+    ok: true,
+    applies: true,
+    name: name || null,
+    url: url || null,
+    mention,
+    source: "C. conso L.612-1 (obligation de recourir à un médiateur de la consommation).",
+    note: "The professional must actually designate a mediator. This is a collable mention, not a registration. Not legal advice.",
+  };
+}
