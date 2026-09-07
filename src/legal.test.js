@@ -22,6 +22,7 @@ import {
   dueDateEom,
   htTtc,
   daysLate,
+  sirenFromSiret,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -308,5 +309,15 @@ describe("daysLate", () => {
     const early = daysLate({ due_date: "2026-09-07", as_of: "2026-09-01" });
     assert.equal(early.days_late, 0);
     assert.equal(early.not_yet_due, true);
+  });
+});
+
+describe("sirenFromSiret", () => {
+  it("splits a valid SIRET and computes the VAT key", () => {
+    const r = sirenFromSiret({ siret: "44306184100047" });
+    assert.equal(r.ok, true);
+    assert.equal(r.siren, "443061841");
+    assert.equal(r.nic, "00047");
+    assert.equal(r.vat_fr, "FR64443061841");
   });
 });

@@ -997,3 +997,43 @@ export function daysLate(input) {
     note: "Feed days_late into /v1/late-penalties. Not legal advice.",
   };
 }
+
+/** Split SIRET into SIREN + NIC, checksum both, optional FR VAT key. No INSEE. */
+export function sirenFromSiret(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const n = digits(i.siret || i.siren || i.value);
+  if (n.length === 9) {
+    const chk = siretOk(n);
+    const vat = vatKey({ siren: n });
+    return {
+      ok: chk.ok,
+      type: "siren",
+      siren: n,
+      nic: null,
+      siret: null,
+      vat_fr: vat.ok ? vat.vat_fr : null,
+      checksum: chk,
+      note: "Checksum only. Does not prove the number exists at INSEE/Sirene.",
+    };
+  }
+  if (n.length !== 14) {
+    return { ok: false, missing: ["siret"], error: "Need siret (14 digits) or siren (9)." };
+  }
+  const siren = n.slice(0, 9);
+  const nic = n.slice(9);
+  const siretChk = siretOk(n);
+  const sirenChk = siretOk(siren);
+  const vat = vatKey({ siren });
+  return {
+    ok: siretChk.ok,
+    type: "siret",
+    siret: n,
+    siren,
+    nic,
+    vat_fr: vat.ok ? vat.vat_fr : null,
+    siret_checksum: siretChk,
+    siren_checksum: sirenChk,
+    source: "SIRET = SIREN (9) + NIC (5). Luhn / La Poste checksum. VAT key CGI 286 ter.",
+    note: "Checksum only. Does not prove the number exists at INSEE/Sirene. Not a VIES proof.",
+  };
+}

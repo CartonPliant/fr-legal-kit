@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -407,6 +407,18 @@ const ROUTES = {
     },
     fn: daysLate,
   },
+  "/v1/siren-from-siret": {
+    description:
+      "Split a French SIRET into SIREN + NIC, checksum both (Luhn / La Poste), and compute the CGI 286 ter VAT key. No INSEE lookup.",
+    tags: ["france", "siret", "siren", "vat", "checksum"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { siret: "44306184100047" } },
+        output: { type: "json", example: { ok: true, siren: "443061841", vat_fr: "FR64443061841" } },
+      },
+    },
+    fn: sirenFromSiret,
+  },
 };
 
 function llmsTxt(base) {
@@ -477,6 +489,9 @@ JSON: { "amount_ht": 100, "rate": "standard" }
 
 POST ${base}/v1/days-late
 JSON: { "due_date": "2026-09-07", "as_of": "2026-09-25" }
+
+POST ${base}/v1/siren-from-siret
+JSON: { "siret": "44306184100047" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
