@@ -1440,3 +1440,43 @@ export function rcsMention(input) {
     note: "Format only. Does not prove the greffe or the immatriculation. Not a Kbis. Not legal advice.",
   };
 }
+
+const ISO4217 = {
+  EUR: { name: "euro", symbol: "€", legal_tender_fr: true },
+  USD: { name: "US dollar", symbol: "$", legal_tender_fr: false },
+  GBP: { name: "pound sterling", symbol: "£", legal_tender_fr: false },
+  CHF: { name: "Swiss franc", symbol: "CHF", legal_tender_fr: false },
+  CAD: { name: "Canadian dollar", symbol: "CA$", legal_tender_fr: false },
+  JPY: { name: "yen", symbol: "¥", legal_tender_fr: false },
+};
+
+/** Invoice currency: euro is FR legal tender; foreign ccy allowed, VAT in EUR. Offline ISO 4217 subset. */
+export function invoiceCurrency(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.currency || i.ccy || i.iso || "EUR")
+    .trim()
+    .toUpperCase();
+  const info = ISO4217[raw];
+  if (!info) {
+    return {
+      ok: false,
+      missing: ["currency"],
+      error: "currency: EUR|USD|GBP|CHF|CAD|JPY (ISO 4217 subset, offline).",
+    };
+  }
+  const mention = info.legal_tender_fr
+    ? "Montants exprimés en euros (EUR)."
+    : `Montants exprimés en ${raw}. La TVA est mentionnée en euros (EUR).`;
+  return {
+    ok: true,
+    currency: raw,
+    name: info.name,
+    symbol: info.symbol,
+    legal_tender_fr: info.legal_tender_fr,
+    vat_in_eur: true,
+    mention,
+    source:
+      "Euro = legal tender (C. mon. et fin.). Foreign currency invoices allowed; VAT expressed in euros (CGI / BOI-TVA-DECLA-30-20-20).",
+    note: "ISO 4217 subset, offline. Not an FX rate. Not a tax ruling.",
+  };
+}

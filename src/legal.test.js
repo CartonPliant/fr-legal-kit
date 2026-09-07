@@ -32,6 +32,7 @@ import {
   phoneFr,
   capitalSocial,
   rcsMention,
+  invoiceCurrency,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -468,5 +469,25 @@ describe("rcsMention", () => {
   });
   it("requires the greffe city", () => {
     assert.equal(rcsMention({ siren: "404833048" }).ok, false);
+  });
+});
+
+describe("invoiceCurrency", () => {
+  it("defaults to EUR as French legal tender", () => {
+    const r = invoiceCurrency({});
+    assert.equal(r.ok, true);
+    assert.equal(r.currency, "EUR");
+    assert.equal(r.legal_tender_fr, true);
+    assert.match(r.mention, /euros/);
+  });
+  it("flags VAT in EUR for a USD invoice", () => {
+    const r = invoiceCurrency({ currency: "USD" });
+    assert.equal(r.ok, true);
+    assert.equal(r.vat_in_eur, true);
+    assert.equal(r.legal_tender_fr, false);
+    assert.match(r.mention, /USD/);
+  });
+  it("rejects an unknown code", () => {
+    assert.equal(invoiceCurrency({ currency: "XYZ" }).ok, false);
   });
 });

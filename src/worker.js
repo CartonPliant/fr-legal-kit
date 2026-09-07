@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -534,6 +534,18 @@ const ROUTES = {
     },
     fn: rcsMention,
   },
+  "/v1/invoice-currency": {
+    description:
+      "French invoice currency: EUR is legal tender. Foreign ISO 4217 (USD/GBP/CHF/CAD/JPY) allowed; VAT is expressed in euros. Offline subset, no FX rate.",
+    tags: ["france", "invoice", "currency", "eur", "tva"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { currency: "EUR" } },
+        output: { type: "json", example: { ok: true, legal_tender_fr: true, mention: "Montants exprimés en euros (EUR)." } },
+      },
+    },
+    fn: invoiceCurrency,
+  },
 };
 
 function llmsTxt(base) {
@@ -634,6 +646,9 @@ JSON: { "form": "sas", "amount_eur": 1000 }
 
 POST ${base}/v1/rcs-mention
 JSON: { "city": "Pau", "siren": "404833048" }
+
+POST ${base}/v1/invoice-currency
+JSON: { "currency": "EUR" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
