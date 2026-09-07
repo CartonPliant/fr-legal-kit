@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -305,6 +305,21 @@ const ROUTES = {
     },
     fn: franchise293b,
   },
+  "/v1/dunning-steps": {
+    description:
+      "Suggested FR B2B dunning calendar after the due date (J+1 / J+8 / J+15). L441-10 penalties accrue without a reminder. Usage, not a statutory timetable.",
+    tags: ["france", "invoice", "dunning", "relance", "L441-10"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { due_date: "2026-09-07" } },
+        output: {
+          type: "json",
+          example: { ok: true, steps: [{ id: "relance_1", calendar_date: "2026-09-08" }] },
+        },
+      },
+    },
+    fn: dunningSteps,
+  },
 };
 
 function llmsTxt(base) {
@@ -350,6 +365,10 @@ JSON: { "bce_refi_pct": 2.4 }
 
 POST ${base}/v1/franchise-293b
 JSON: { "activity": "services"|"goods"|"lawyers"|"authors", "ca_n1_eur": 20000, "ca_n_eur": 18000 }
+
+POST ${base}/v1/dunning-steps
+JSON: { "due_date": "2026-09-07" }
+or { "invoice_date": "2026-09-01", "net_days": 30 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

@@ -528,6 +528,53 @@ export function franchise293b(input) {
   };
 }
 
+/**
+ * Suggested B2B dunning calendar after the due date.
+ * L441-10 penalties accrue without a reminder; the dates are commercial usage.
+ */
+export function dunningSteps(input) {
+  const i = input && typeof input === "object" ? input : {};
+  let due = parseISODate(i.due_date);
+  if (!due && (i.invoice_date || i.date)) {
+    const dd = dueDate({
+      invoice_date: i.invoice_date || i.date,
+      net_days: i.net_days ?? i.days ?? 30,
+      alsace_moselle: i.alsace_moselle,
+    });
+    if (!dd.ok) return dd;
+    due = parseISODate(dd.calendar_due);
+  }
+  if (!due) {
+    return {
+      ok: false,
+      missing: ["due_date"],
+      error: "due_date YYYY-MM-DD, or invoice_date + net_days.",
+    };
+  }
+  const alsace = Boolean(i.alsace_moselle);
+  const offsets = [
+    { id: "relance_1", offset_days: 1, kind: "amiable", label: "Première relance amiable" },
+    { id: "relance_2", offset_days: 8, kind: "amiable", label: "Deuxième relance amiable" },
+    { id: "mise_en_demeure", offset_days: 15, kind: "formal", label: "Mise en demeure (LRAR, usage)" },
+  ];
+  const steps = offsets.map((s) => {
+    const d = addDays(due, s.offset_days);
+    const open = nextOpenDay(d, alsace);
+    return { ...s, calendar_date: ymd(d), next_open_day: ymd(open) };
+  });
+  return {
+    ok: true,
+    due_date: ymd(due),
+    steps,
+    penalties_without_reminder: true,
+    penalties_note:
+      "L441-10 interest + 40 € indemnity are due automatically from the day after the due date; a reminder is not a condition.",
+    source:
+      "C. com. L441-10 (pénalités de plein droit, sans rappel). Step dates are commercial usage, not a statutory timetable.",
+    note: "Usage calendar for recovery letters. Not a legal opinion. Not a huissier product.",
+  };
+}
+
 /** Statutory ceiling on agreed B2B payment terms (L441-10 I). */
 export function paymentTermMax(input) {
   const i = input && typeof input === "object" ? input : {};

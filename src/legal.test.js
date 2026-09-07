@@ -14,6 +14,7 @@ import {
   vatKey,
   penaltyText,
   franchise293b,
+  dunningSteps,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -179,5 +180,23 @@ describe("franchise293b", () => {
   it("exit_immediate when CA N exceeds majoré", () => {
     const r = franchise293b({ activity: "services", ca_n_eur: 42000 });
     assert.equal(r.status, "exit_immediate");
+  });
+});
+
+describe("dunningSteps", () => {
+  it("schedules relance + mise en demeure from due_date", () => {
+    const r = dunningSteps({ due_date: "2026-09-07" });
+    assert.equal(r.ok, true);
+    assert.equal(r.due_date, "2026-09-07");
+    assert.equal(r.penalties_without_reminder, true);
+    const ids = r.steps.map((s) => s.id);
+    assert.deepEqual(ids, ["relance_1", "relance_2", "mise_en_demeure"]);
+    assert.equal(r.steps[0].calendar_date, "2026-09-08");
+    assert.equal(r.steps[2].calendar_date, "2026-09-22");
+  });
+  it("accepts invoice_date + net_days", () => {
+    const r = dunningSteps({ invoice_date: "2026-09-01", net_days: 0 });
+    assert.equal(r.ok, true);
+    assert.equal(r.due_date, "2026-09-01");
   });
 });
