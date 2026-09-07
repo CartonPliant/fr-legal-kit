@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma, joursFrancs, clausePenale, periode, autofacturation, rgpd, langue } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma, joursFrancs, clausePenale, periode, autofacturation, rgpd, langue, commande, debours } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -948,6 +948,30 @@ const ROUTES = {
     },
     fn: langue,
   },
+  "/v1/commande": {
+    description:
+      "French invoice purchase-order reference (number + optional date). Usage for identifying the operation (L441-9).",
+    tags: ["france", "invoice", "commande", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { number: "BC-42", date: "2026-09-01" } },
+        output: { type: "json", example: { ok: true } },
+      },
+    },
+    fn: commande,
+  },
+  "/v1/debours": {
+    description:
+      "French disbursements (débours): paid in the client's name, out of the VAT base (CGI 267). Optional amount + label.",
+    tags: ["france", "tva", "debours", "CGI267", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { amount_eur: 80, label: "timbre fiscal" } },
+        output: { type: "json", example: { ok: true, vat_base: false } },
+      },
+    },
+    fn: debours,
+  },
 };
 
 function llmsTxt(base) {
@@ -1150,6 +1174,12 @@ JSON: { "controller": "Yanis Monnet EI" }
 
 POST ${base}/v1/langue
 JSON: { "buyer": "b2c" }
+
+POST ${base}/v1/commande
+JSON: { "number": "BC-42", "date": "2026-09-01" }
+
+POST ${base}/v1/debours
+JSON: { "amount_eur": 80, "label": "timbre fiscal" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

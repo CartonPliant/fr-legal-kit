@@ -70,6 +70,8 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/autofacturation` | Self-billing stamp (CGI 289), optional seller name |
 | `/v1/rgpd` | Invoice data footer: RGPD 6.1.b/c + 10-year keep |
 | `/v1/langue` | French language mention (Toubon B2C / tax-control B2B) |
+| `/v1/commande` | Purchase-order number (+ optional date) on the invoice |
+| `/v1/debours` | Disbursements out of the VAT base (CGI 267) |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

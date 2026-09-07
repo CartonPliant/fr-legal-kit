@@ -66,6 +66,8 @@ import {
   autofacturation,
   rgpd,
   langue,
+  commande,
+  debours,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -1074,5 +1076,32 @@ describe("langue", () => {
     const r = langue({ buyer: "b2b" });
     assert.match(r.mention, /français/);
     assert.equal(r.buyer, "b2b");
+  });
+});
+
+describe("commande", () => {
+  it("formats number and date", () => {
+    const r = commande({ number: "BC-42", date: "2026-09-01" });
+    assert.equal(r.ok, true);
+    assert.match(r.mention, /BC-42/);
+    assert.match(r.mention, /01\/09\/2026/);
+  });
+  it("requires a number", () => {
+    const r = commande({});
+    assert.equal(r.ok, false);
+  });
+});
+
+describe("debours", () => {
+  it("puts the amount outside the VAT base", () => {
+    const r = debours({ amount_eur: 80, label: "timbre fiscal" });
+    assert.equal(r.ok, true);
+    assert.equal(r.vat_base, false);
+    assert.match(r.mention, /80,00/);
+    assert.match(r.mention, /CGI 267/);
+  });
+  it("works without an amount", () => {
+    const r = debours({});
+    assert.match(r.mention, /CGI 267/);
   });
 });

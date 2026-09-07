@@ -2612,3 +2612,51 @@ export function langue(input) {
     note: "B2B invoices may be in another language; the tax administration can ask for French. Not legal advice.",
   };
 }
+
+/** Purchase-order reference on an invoice (usage; L441-9 identification of the operation). */
+export function commande(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const number = String(i.number || i.no || i.ref || i.po || "").trim();
+  if (!number) return { ok: false, missing: ["number"], error: "order number." };
+  const d = parseISODate(i.date || i.order_date || i.commande_date);
+  const mention = d
+    ? `Commande n° ${number} du ${dateFr({ date: ymd(d) }).formatted}.`
+    : `Commande n° ${number}.`;
+  return {
+    ok: true,
+    number,
+    date: d ? ymd(d) : null,
+    mention,
+    source: "C. com. L441-9 (identification de l'opération). Purchase-order ref is usage, not a statutory field.",
+    note: "Does not prove the PO exists. Not legal advice.",
+  };
+}
+
+/** Disbursements (débours): paid in the client's name, documented, out of the VAT base (CGI 267). */
+export function debours(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = i.amount_eur ?? i.amount ?? i.montant;
+  let amount = null;
+  if (raw !== undefined && raw !== null && raw !== "") {
+    amount = Number(String(raw).replace(/\s/g, "").replace(",", "."));
+    if (!Number.isFinite(amount) || amount < 0) return { ok: false, error: "amount_eur >= 0." };
+  }
+  const label = String(i.label || i.libelle || "").trim();
+  let mention;
+  if (amount != null && label) {
+    mention = `Débours : ${label} ${formatEurFr(amount)} (hors base HT, CGI 267).`;
+  } else if (amount != null) {
+    mention = `Débours : ${formatEurFr(amount)} (hors base HT, CGI 267).`;
+  } else {
+    mention = "Débours refacturés pour le compte du client, hors base HT (CGI 267).";
+  }
+  return {
+    ok: true,
+    amount_eur: amount,
+    label: label || null,
+    vat_base: false,
+    mention,
+    source: "CGI 267 (sommes versées au nom et pour le compte du client, justificatifs à l'appui).",
+    note: "Must be paid in the client's name with proof. Not a tax ruling.",
+  };
+}
