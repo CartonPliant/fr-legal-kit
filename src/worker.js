@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -467,6 +467,18 @@ const ROUTES = {
     },
     fn: legalForm,
   },
+  "/v1/iban-fr": {
+    description:
+      "French IBAN structure: 27 chars, bank/branch/account/RIB key, plus ISO 13616 checksum. Does not prove the account exists.",
+    tags: ["france", "iban", "payments", "rib"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { iban: "FR1420041010050500013M02606" } },
+        output: { type: "json", example: { ok: true, bank: "20041", length: 27 } },
+      },
+    },
+    fn: ibanFr,
+  },
 };
 
 function llmsTxt(base) {
@@ -552,6 +564,9 @@ JSON: { "postcode": "67000" }
 
 POST ${base}/v1/legal-form
 JSON: { "form": "sas" }
+
+POST ${base}/v1/iban-fr
+JSON: { "iban": "FR1420041010050500013M02606" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

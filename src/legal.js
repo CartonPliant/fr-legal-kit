@@ -1166,3 +1166,33 @@ export function legalForm(input) {
     note: "Extra fields on top of the core L441-9 checklist (/v1/mention-fields). Not a legal opinion.",
   };
 }
+
+/** French IBAN structure: FR + 2 check + 5 bank + 5 branch + 11 account + 2 RIB key (27 chars). */
+export function ibanFr(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const r = ibanOk(i.iban || i.value);
+  const compact = r.compact || "";
+  if (!r.ok) {
+    return { ok: false, compact, error: r.reason === "format" ? "IBAN format invalid." : "ISO 13616 checksum failed." };
+  }
+  if (compact.slice(0, 2) !== "FR") {
+    return { ok: false, compact, error: "Not a FR IBAN (prefix FR)." };
+  }
+  if (compact.length !== 27) {
+    return { ok: false, compact, length: compact.length, error: "FR IBAN must be 27 characters." };
+  }
+  return {
+    ok: true,
+    compact,
+    country: "FR",
+    check: compact.slice(2, 4),
+    bank: compact.slice(4, 9),
+    branch: compact.slice(9, 14),
+    account: compact.slice(14, 25),
+    rib_key: compact.slice(25, 27),
+    length: 27,
+    iso_checksum: true,
+    source: "ISO 13616 + CFONB FR BBAN (5+5+11+2).",
+    note: "Checksum and structure only. Does not prove the account exists.",
+  };
+}

@@ -27,6 +27,7 @@ import {
   apeNaf,
   postcodeFr,
   legalForm,
+  ibanFr,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -370,5 +371,16 @@ describe("legalForm", () => {
     assert.equal(sas.is_societe, true);
     assert.ok(sas.extra.some((x) => x.id === "capital"));
     assert.ok(sas.extra.some((x) => x.id === "rcs"));
+  });
+});
+
+describe("ibanFr", () => {
+  it("splits a constructed FR IBAN", () => {
+    const r = ibanFr({ iban: "FR1420041010050500013M02606" });
+    assert.equal(r.ok, true);
+    assert.equal(r.length, 27);
+    assert.equal(r.bank, "20041");
+    assert.equal(r.branch, "01005");
+    assert.equal(r.rib_key, "06");
   });
 });

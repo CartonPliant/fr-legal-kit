@@ -31,6 +31,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/ape-naf` | APE/NAF rev.2 format (4 digits + letter, e.g. 62.01Z). No INSEE |
 | `/v1/postcode-fr` | 5-digit postcode → department (2A/2B, 97x, Alsace-Moselle flag) |
 | `/v1/legal-form` | Extra invoice mentions by form (EI/micro vs SAS/SARL capital+RCS) |
+| `/v1/iban-fr` | FR IBAN 27 chars: bank / branch / account / RIB key + ISO checksum |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |
