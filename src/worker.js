@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -717,6 +717,18 @@ const ROUTES = {
     },
     fn: unit,
   },
+  "/v1/cgv": {
+    description:
+      "French CGV invoice mention (C. com. L441-6): 'Nos conditions générales de vente s'appliquent.' Optional URL. A mention does not replace prior communication to the professional buyer.",
+    tags: ["france", "invoice", "cgv", "L441-6"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { url: "https://example.com/cgv" } },
+        output: { type: "json", example: { ok: true, mention: "Nos conditions générales de vente s'appliquent : https://example.com/cgv" } },
+      },
+    },
+    fn: cgv,
+  },
 };
 
 function llmsTxt(base) {
@@ -862,6 +874,9 @@ JSON: { "name": "ACME SAS", "siret": "44306184100047" }
 
 POST ${base}/v1/unit
 JSON: { "kind": "jour", "qty": 8 }
+
+POST ${base}/v1/cgv
+JSON: { "url": "https://example.com/cgv" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

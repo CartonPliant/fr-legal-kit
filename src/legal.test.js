@@ -47,6 +47,7 @@ import {
   rmMention,
   buyer,
   unit,
+  cgv,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -749,5 +750,22 @@ describe("unit", () => {
   });
   it("rejects an unknown unit", () => {
     assert.equal(unit({ kind: "parsec" }).ok, false);
+  });
+});
+
+describe("cgv", () => {
+  it("returns the default invoice mention", () => {
+    const r = cgv({});
+    assert.equal(r.ok, true);
+    assert.match(r.mention, /conditions générales de vente/);
+    assert.equal(r.communicated, true);
+  });
+  it("appends a URL", () => {
+    const r = cgv({ url: "https://example.com/cgv" });
+    assert.match(r.mention, /example.com\/cgv/);
+  });
+  it("flags when CGV were not communicated", () => {
+    const r = cgv({ communicated: false });
+    assert.equal(r.communicated, false);
   });
 });

@@ -2049,3 +2049,22 @@ export function unit(input) {
     note: "Does not convert units. Not a metrology certificate. Not legal advice.",
   };
 }
+
+/** L441-6 CGV: collable invoice mention. Communication to the professional buyer is the statutory duty. */
+export function cgv(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const url = String(i.url || i.link || "").trim();
+  const communicated = i.communicated !== false;
+  const mention = url
+    ? `Nos conditions générales de vente s'appliquent : ${url}`
+    : "Nos conditions générales de vente s'appliquent.";
+  return {
+    ok: true,
+    communicated,
+    url: url || null,
+    mention,
+    duty: "C. com. L441-6 : the seller must communicate the CGV to the professional buyer.",
+    source: "C. com. L441-6 (communication des CGV au professionnel). Invoice mention is usage.",
+    note: "A mention on the invoice does not replace prior communication of the CGV. Not legal advice.",
+  };
+}
