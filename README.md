@@ -53,6 +53,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/unit` | Line unit of measure (heure / jour / forfait / …) + optional qty |
 | `/v1/cgv` | L441-6 CGV mention (« Nos conditions générales de vente s'appliquent. ») |
 | `/v1/reserve-propriete` | Retention-of-title clause (L.624-16) until full payment. Goods only |
+| `/v1/garantie-legale` | Consumer legal warranty 2 years from delivery (C. conso L.217-3) |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

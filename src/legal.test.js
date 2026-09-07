@@ -49,6 +49,7 @@ import {
   unit,
   cgv,
   reservePropriete,
+  garantieLegale,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -786,5 +787,24 @@ describe("reservePropriete", () => {
     const r = reservePropriete({ kind: "services" });
     assert.equal(r.applies, false);
     assert.equal(r.mention, null);
+  });
+});
+
+describe("garantieLegale", () => {
+  it("is 2 years from delivery for a consumer", () => {
+    const r = garantieLegale({ delivery_date: "2026-09-07" });
+    assert.equal(r.ok, true);
+    assert.equal(r.applies, true);
+    assert.equal(r.expires_on, "2028-09-07");
+    assert.match(r.mention, /07\/09\/2028/);
+  });
+  it("does not apply to a professional buyer", () => {
+    const r = garantieLegale({ buyer: "b2b" });
+    assert.equal(r.applies, false);
+  });
+  it("works without a delivery date", () => {
+    const r = garantieLegale({});
+    assert.equal(r.duration_years, 2);
+    assert.equal(r.expires_on, null);
   });
 });

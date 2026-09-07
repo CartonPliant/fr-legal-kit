@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -744,6 +744,18 @@ const ROUTES = {
     },
     fn: reservePropriete,
   },
+  "/v1/garantie-legale": {
+    description:
+      "French legal warranty of conformity (C. conso L.217-3): 2 years from delivery for consumer goods. Does not apply to professional buyers. Optional delivery_date → expiry.",
+    tags: ["france", "conso", "garantie", "L217-3", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { delivery_date: "2026-09-07" } },
+        output: { type: "json", example: { ok: true, expires_on: "2028-09-07" } },
+      },
+    },
+    fn: garantieLegale,
+  },
 };
 
 function llmsTxt(base) {
@@ -895,6 +907,9 @@ JSON: { "url": "https://example.com/cgv" }
 
 POST ${base}/v1/reserve-propriete
 JSON: { "kind": "goods" }
+
+POST ${base}/v1/garantie-legale
+JSON: { "delivery_date": "2026-09-07" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

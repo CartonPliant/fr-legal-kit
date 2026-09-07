@@ -2101,3 +2101,45 @@ export function reservePropriete(input) {
     note: "Written clause; opposability has extra conditions. Not a legal opinion.",
   };
 }
+
+/** Legal warranty of conformity (C. conso L.217-3): 2 years from delivery for consumer goods. */
+export function garantieLegale(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.buyer || i.kind || i.audience || "b2c")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const b2b = raw === "b2b" || raw === "professionnel";
+  if (b2b) {
+    return {
+      ok: true,
+      applies: false,
+      duration_years: null,
+      expires_on: null,
+      mention:
+        "Garantie légale de conformité (C. conso L.217-3) : ne s'applique pas à un acheteur professionnel.",
+      source: "C. conso L.217-3 (garantie légale de conformité, consommateur).",
+      note: "B2B may still have hidden-defects warranty (C. civ. 1641) unless waived. Not legal advice.",
+    };
+  }
+  const delivery = parseISODate(i.delivery_date || i.delivered_on || i.date);
+  let expires_on = null;
+  if (delivery) {
+    const e = new Date(delivery.getTime());
+    e.setUTCFullYear(e.getUTCFullYear() + 2);
+    expires_on = ymd(e);
+  }
+  const mention = expires_on
+    ? `Garantie légale de conformité : 2 ans à compter de la délivrance (jusqu'au ${dateFr({ date: expires_on }).formatted}) (C. conso L.217-3).`
+    : "Garantie légale de conformité : 2 ans à compter de la délivrance du bien (C. conso L.217-3).";
+  return {
+    ok: true,
+    applies: true,
+    duration_years: 2,
+    expires_on,
+    mention,
+    source: "C. conso L.217-3 (garantie légale de conformité, 2 ans). Distinct from commercial warranty.",
+    note: "Consumer goods. Hidden defects (C. civ. 1641) may also apply. Not legal advice.",
+  };
+}
