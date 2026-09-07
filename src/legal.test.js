@@ -8,6 +8,7 @@ import {
   classifySize,
   dueDate,
   tvaRate,
+  holidays,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -94,5 +95,14 @@ describe("tvaRate", () => {
     const r = tvaRate({ rate: "standard" });
     assert.equal(r.ok, true);
     assert.equal(r.rate_pct, 20);
+  });
+});
+
+describe("holidays", () => {
+  it("lists 11 metropolitan 2026 days including Easter Monday", () => {
+    const r = holidays({ year: 2026 });
+    assert.equal(r.ok, true);
+    assert.equal(r.count, 11);
+    assert.ok(r.holidays.some((h) => h.date === "2026-04-06"));
   });
 });

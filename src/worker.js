@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -227,6 +227,18 @@ const ROUTES = {
     },
     fn: tvaRate,
   },
+  "/v1/holidays": {
+    description:
+      "French metropolitan public holidays for 2026 or 2027 (C. trav. L.3133-1). Optional Alsace-Moselle extras. No live fetch.",
+    tags: ["france", "jours-feries", "calendar", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { year: 2026, alsace_moselle: false } },
+        output: { type: "json", example: { ok: true, count: 11, holidays: [{ date: "2026-04-06", name: "Lundi de Pâques" }] } },
+      },
+    },
+    fn: holidays,
+  },
 };
 
 function llmsTxt(base) {
@@ -254,6 +266,9 @@ JSON: { "invoice_date": "2026-04-01", "net_days": 30, "alsace_moselle": false }
 
 POST ${base}/v1/tva-rate
 JSON: { "rate": "standard"|"intermediate"|"reduced"|"super_reduced"|"exempt" }
+
+POST ${base}/v1/holidays
+JSON: { "year": 2026, "alsace_moselle": false }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

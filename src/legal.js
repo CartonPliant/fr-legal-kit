@@ -332,6 +332,33 @@ const TVA = {
   exempt: { rate_pct: 0, cgi: "exempt / hors champ — not a rate", examples: ["some education, insurance, 293 B franchise is not a VAT rate"] },
 };
 
+export function holidays(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const year = String(i.year || "2026");
+  if (!/^\d{4}$/.test(year)) {
+    return { ok: false, missing: ["year"], error: "year as YYYY (2026 or 2027)." };
+  }
+  const alsace = Boolean(i.alsace_moselle);
+  const out = [];
+  for (const [d, name] of Object.entries(FR_HOLIDAYS)) {
+    if (d.startsWith(year + "-")) out.push({ date: d, name, scope: "metropolitan" });
+  }
+  if (alsace) {
+    for (const [d, name] of Object.entries(ALSACE_EXTRA)) {
+      if (d.startsWith(year + "-")) out.push({ date: d, name, scope: "alsace-moselle" });
+    }
+  }
+  out.sort((a, b) => a.date.localeCompare(b.date));
+  return {
+    ok: out.length > 0,
+    year,
+    count: out.length,
+    holidays: out,
+    source: "C. trav. L.3133-1. 2026 dates cross-checked franceinfo.fr / calendriergratuit.fr (2026-09-07).",
+    note: "Métropole. Alsace-Moselle extras only if alsace_moselle=true. Not overseas abolition days.",
+  };
+}
+
 export function tvaRate(input) {
   const i = input && typeof input === "object" ? input : {};
   const key = String(i.rate || i.category || i.kind || "").toLowerCase().replace(/[-\s]+/g, "_");
