@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -203,6 +203,30 @@ const ROUTES = {
     },
     fn: checkIban,
   },
+  "/v1/due-date": {
+    description:
+      "French invoice due date: invoice_date + net_days (calendar). Also next_open_day skipping weekends + L.3133-1 holidays 2026–2027. No live calendar fetch.",
+    tags: ["france", "invoice", "due-date", "jours-feries"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { invoice_date: "2026-04-01", net_days: 30 } },
+        output: { type: "json", example: { ok: true, calendar_due: "2026-05-01", next_open_day: "2026-05-04" } },
+      },
+    },
+    fn: dueDate,
+  },
+  "/v1/tva-rate": {
+    description:
+      "Indicative FR VAT rate table: standard 20 / intermediate 10 / reduced 5.5 / super_reduced 2.1 / exempt. Not a tax ruling.",
+    tags: ["france", "tva", "vat", "cgi"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { rate: "standard" } },
+        output: { type: "json", example: { ok: true, rate_pct: 20, cgi: "CGI art. 278" } },
+      },
+    },
+    fn: tvaRate,
+  },
 };
 
 function llmsTxt(base) {
@@ -224,6 +248,14 @@ JSON: { "siret": "14 digits" }
 
 POST ${base}/v1/check-iban
 JSON: { "iban": "FRxx..." }
+
+POST ${base}/v1/due-date
+JSON: { "invoice_date": "2026-04-01", "net_days": 30, "alsace_moselle": false }
+
+POST ${base}/v1/tva-rate
+JSON: { "rate": "standard"|"intermediate"|"reduced"|"super_reduced"|"exempt" }
+
+MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
 Discovery: ${base}/.well-known/x402.json
 Agent card: ${base}/.well-known/agent-card.json
@@ -281,6 +313,63 @@ function agentCard(req) {
       outputModes: ["application/json"],
     })),
   };
+}
+
+async function handleMcp(req, env) {
+  let body = {};
+  try {
+    body = await req.json();
+  } catch {
+    body = {};
+  }
+  const id = body && body.id !== undefined ? body.id : null;
+  const method = body && body.method;
+  if (method === "initialize") {
+    return json({
+      jsonrpc: "2.0",
+      id,
+      result: {
+        protocolVersion: "2024-11-05",
+        capabilities: { tools: {} },
+        serverInfo: { name: SERVICE, version: "1.1.0" },
+      },
+    });
+  }
+  if (method === "notifications/initialized") {
+    return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*" } });
+  }
+  if (method === "tools/list") {
+    const tools = Object.entries(ROUTES).map(([p, r]) => ({
+      name: p.replace("/v1/", "").replace(/-/g, "_"),
+      description: r.description + " Paid $0.01 USDC Base x402.",
+      inputSchema: { type: "object", additionalProperties: true },
+    }));
+    return json({ jsonrpc: "2.0", id, result: { tools } });
+  }
+  if (method === "tools/call") {
+    const raw = String((body.params && body.params.name) || "");
+    const path = `/v1/${raw.replace(/_/g, "-")}`;
+    const r = ROUTES[path];
+    if (!r) {
+      return json({ jsonrpc: "2.0", id, error: { code: -32601, message: `Unknown tool ${raw}` } });
+    }
+    const fake = new Request(origin(req) + path, {
+      method: "POST",
+      headers: req.headers,
+      body: JSON.stringify((body.params && body.params.arguments) || {}),
+    });
+    const paid = await handlePaid(fake, env, path, r.description, r.tags, r.bazaar, r.fn);
+    if (paid.status === 402) {
+      return paid;
+    }
+    const data = await paid.json().catch(() => ({}));
+    return json({
+      jsonrpc: "2.0",
+      id,
+      result: { content: [{ type: "text", text: JSON.stringify(data) }] },
+    });
+  }
+  return json({ jsonrpc: "2.0", id, error: { code: -32601, message: "Method not found" } });
 }
 
 export default {
@@ -346,14 +435,30 @@ export default {
       }
       return json({ error: "Send JSON-RPC message/send or POST a paid /v1/* route" }, 400);
     }
-    if (ROUTES[path] && req.method === "POST") {
+    if (path === "/mcp" && req.method === "GET") {
+      return json({
+        name: SERVICE,
+        transport: "json-rpc POST /mcp",
+        tools: Object.keys(ROUTES).map((p) => p.replace("/v1/", "")),
+        paid: "$0.01 USDC Base on tools/call",
+      });
+    }
+    if (path === "/mcp" && req.method === "POST") {
+      return handleMcp(req, env);
+    }
+    if (ROUTES[path] && (req.method === "POST" || req.method === "GET")) {
       const r = ROUTES[path];
+      if (req.method === "GET") {
+        if (!payTo(env)) return json({ error: "PAY_TO wallet not configured" }, 503);
+        return paymentRequired(req, env, path, r.description, r.tags, r.bazaar);
+      }
       return handlePaid(req, env, path, r.description, r.tags, r.bazaar, r.fn);
     }
     if (path === "/" && req.method === "GET") {
       return json({
         name: SERVICE,
-        paid: "POST /v1/einvoice-who | /v1/late-penalties | /v1/check-siret | /v1/check-iban — $0.01 USDC Base x402",
+        paid: "POST /v1/einvoice-who | /v1/late-penalties | /v1/due-date | /v1/tva-rate | /v1/check-siret | /v1/check-iban — $0.01 USDC Base x402",
+        mcp: "POST /mcp",
         docs: "/llms.txt",
         x402: "/.well-known/x402.json",
         related: "https://fr-invoice-mentions.monnet-yanis1.workers.dev",

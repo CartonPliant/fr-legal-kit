@@ -6,6 +6,8 @@ import {
   latePenalties,
   einvoiceWho,
   classifySize,
+  dueDate,
+  tvaRate,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -73,5 +75,24 @@ describe("einvoiceWho", () => {
   it("heuristic GE from employee count", () => {
     assert.equal(classifySize({ employees: 6000 }), "ge");
     assert.equal(classifySize({ employees: 3, ca_eur: 100000 }), "micro");
+  });
+});
+
+describe("dueDate", () => {
+  it("adds calendar days and rolls weekend/holiday", () => {
+    const r = dueDate({ invoice_date: "2026-04-01", net_days: 5 });
+    assert.equal(r.ok, true);
+    assert.equal(r.calendar_due, "2026-04-06");
+    assert.equal(r.next_open_day, "2026-04-07");
+    assert.equal(r.rolled_to_open, true);
+    assert.ok(r.holidays_in_window.some((h) => h.date === "2026-04-06"));
+  });
+});
+
+describe("tvaRate", () => {
+  it("returns 20 for standard", () => {
+    const r = tvaRate({ rate: "standard" });
+    assert.equal(r.ok, true);
+    assert.equal(r.rate_pct, 20);
   });
 });

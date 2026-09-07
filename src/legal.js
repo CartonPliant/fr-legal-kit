@@ -210,3 +210,163 @@ export function checkIban(input) {
     note: "ISO 13616 checksum only. Does not prove the account exists.",
   };
 }
+
+/**
+ * Metropolitan FR public holidays 2026–2027 (C. trav. L.3133-1).
+ * 2026 Easter Monday 6 Apr, Ascension 14 May, Whit Monday 25 May
+ * (franceinfo / calendriergratuit.fr, checked 2026-09-07).
+ */
+export const FR_HOLIDAYS = {
+  "2026-01-01": "Jour de l'An",
+  "2026-04-06": "Lundi de Pâques",
+  "2026-05-01": "Fête du Travail",
+  "2026-05-08": "Victoire 1945",
+  "2026-05-14": "Ascension",
+  "2026-05-25": "Lundi de Pentecôte",
+  "2026-07-14": "Fête nationale",
+  "2026-08-15": "Assomption",
+  "2026-11-01": "Toussaint",
+  "2026-11-11": "Armistice 1918",
+  "2026-12-25": "Noël",
+  "2027-01-01": "Jour de l'An",
+  "2027-03-29": "Lundi de Pâques",
+  "2027-05-01": "Fête du Travail",
+  "2027-05-06": "Ascension",
+  "2027-05-08": "Victoire 1945",
+  "2027-05-17": "Lundi de Pentecôte",
+  "2027-07-14": "Fête nationale",
+  "2027-08-15": "Assomption",
+  "2027-11-01": "Toussaint",
+  "2027-11-11": "Armistice 1918",
+  "2027-12-25": "Noël",
+};
+
+const ALSACE_EXTRA = {
+  "2026-04-03": "Vendredi Saint (Alsace-Moselle)",
+  "2026-12-26": "Saint-Étienne (Alsace-Moselle)",
+  "2027-03-26": "Vendredi Saint (Alsace-Moselle)",
+  "2027-12-26": "Saint-Étienne (Alsace-Moselle)",
+};
+
+function ymd(d) {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function parseISODate(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || "").trim());
+  if (!m) return null;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  if (ymd(d) !== `${m[1]}-${m[2]}-${m[3]}`) return null;
+  return d;
+}
+
+function addDays(d, n) {
+  const x = new Date(d.getTime());
+  x.setUTCDate(x.getUTCDate() + n);
+  return x;
+}
+
+function holidayName(iso, alsace) {
+  return FR_HOLIDAYS[iso] || (alsace ? ALSACE_EXTRA[iso] : undefined);
+}
+
+function isWeekend(d) {
+  const w = d.getUTCDay();
+  return w === 0 || w === 6;
+}
+
+function nextOpenDay(d, alsace) {
+  let x = new Date(d.getTime());
+  for (let i = 0; i < 14; i++) {
+    const iso = ymd(x);
+    if (!isWeekend(x) && !holidayName(iso, alsace)) return x;
+    x = addDays(x, 1);
+  }
+  return x;
+}
+
+/** Invoice due date. L441-10 delays are calendar days unless the contract says otherwise. */
+export function dueDate(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const start = parseISODate(i.invoice_date || i.date);
+  const net = Number(i.net_days ?? i.days ?? 30);
+  const alsace = Boolean(i.alsace_moselle);
+  if (!start) {
+    return { ok: false, missing: ["invoice_date"], error: "invoice_date YYYY-MM-DD required." };
+  }
+  if (!Number.isFinite(net) || net < 0 || net > 3650) {
+    return { ok: false, missing: ["net_days"], error: "net_days 0–3650." };
+  }
+  const calendar = addDays(start, net);
+  const open = nextOpenDay(calendar, alsace);
+  const holidays = [];
+  for (let n = 0; n <= net + 10; n++) {
+    const d = addDays(start, n);
+    const iso = ymd(d);
+    const name = holidayName(iso, alsace);
+    if (name) holidays.push({ date: iso, name });
+  }
+  return {
+    ok: true,
+    invoice_date: ymd(start),
+    net_days: net,
+    calendar_due: ymd(calendar),
+    next_open_day: ymd(open),
+    rolled_to_open: ymd(open) !== ymd(calendar),
+    weekday_calendar_due: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][calendar.getUTCDay()],
+    holidays_in_window: holidays,
+    alsace_moselle: alsace,
+    note: "L441-10 payment periods are calendar days. next_open_day skips Sat/Sun + L.3133-1 holidays (métropole 2026–2027). Not legal advice.",
+    source: "C. trav. L.3133-1; 2026 dates: franceinfo.fr jours-feries-en-2026 (Lundi de Pâques 6 avr, Ascension 14 mai, Pentecôte 25 mai).",
+  };
+}
+
+const TVA = {
+  standard: { rate_pct: 20, cgi: "CGI art. 278", examples: ["most goods and services"] },
+  intermediate: { rate_pct: 10, cgi: "CGI art. 278 bis", examples: ["restaurant on-site, passenger transport, some renovations"] },
+  reduced: { rate_pct: 5.5, cgi: "CGI art. 278-0 bis", examples: ["most food, books, some energy"] },
+  super_reduced: { rate_pct: 2.1, cgi: "CGI art. 281 quater", examples: ["press, some medicines"] },
+  exempt: { rate_pct: 0, cgi: "exempt / hors champ — not a rate", examples: ["some education, insurance, 293 B franchise is not a VAT rate"] },
+};
+
+export function tvaRate(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const key = String(i.rate || i.category || i.kind || "").toLowerCase().replace(/[-\s]+/g, "_");
+  const alias = {
+    standard: "standard",
+    normal: "standard",
+    "20": "standard",
+    intermediate: "intermediate",
+    intermediaire: "intermediate",
+    "10": "intermediate",
+    reduced: "reduced",
+    reduit: "reduced",
+    "5.5": "reduced",
+    "5_5": "reduced",
+    super_reduced: "super_reduced",
+    superreduit: "super_reduced",
+    "2.1": "super_reduced",
+    exempt: "exempt",
+    exonere: "exempt",
+    "293b": "exempt",
+    "293_b": "exempt",
+  };
+  const k = alias[key];
+  if (!k) {
+    return {
+      ok: false,
+      missing: ["rate"],
+      error: "rate: standard|intermediate|reduced|super_reduced|exempt",
+      rates: Object.fromEntries(Object.entries(TVA).map(([id, v]) => [id, v.rate_pct])),
+    };
+  }
+  return {
+    ok: true,
+    category: k,
+    ...TVA[k],
+    note: "Indicative metropolitan rates. 293 B is a franchise, not a 0% rate. Not a tax ruling.",
+  };
+}
