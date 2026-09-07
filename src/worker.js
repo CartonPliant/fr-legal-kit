@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -657,6 +657,18 @@ const ROUTES = {
     },
     fn: autoliquidation,
   },
+  "/v1/eori": {
+    description:
+      "French EORI format: FR + SIREN (legal entity). From a SIRET also returns FR+SIRET establishment form. Format only, no customs lookup.",
+    tags: ["france", "eori", "customs", "siren", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { siren: "404833048" } },
+        output: { type: "json", example: { ok: true, eori: "FR404833048" } },
+      },
+    },
+    fn: eori,
+  },
 };
 
 function llmsTxt(base) {
@@ -787,6 +799,9 @@ JSON: { "kind": "facture", "number": "F-2026-0042" }
 
 POST ${base}/v1/autoliquidation
 JSON: { "kind": "intra_eu" }
+
+POST ${base}/v1/eori
+JSON: { "siren": "404833048" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

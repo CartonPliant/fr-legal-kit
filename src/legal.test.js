@@ -42,6 +42,7 @@ import {
   netAPayer,
   docTitle,
   autoliquidation,
+  eori,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -658,5 +659,22 @@ describe("autoliquidation", () => {
   });
   it("rejects an unknown case", () => {
     assert.equal(autoliquidation({ kind: "retail" }).ok, false);
+  });
+});
+
+describe("eori", () => {
+  it("builds FR + SIREN", () => {
+    const r = eori({ siren: "404833048" });
+    assert.equal(r.ok, true);
+    assert.equal(r.eori, "FR404833048");
+    assert.equal(r.mention, "EORI FR404833048");
+  });
+  it("accepts a SIRET and returns entity + establishment", () => {
+    const r = eori({ siret: "44306184100047" });
+    assert.equal(r.eori, "FR443061841");
+    assert.equal(r.establishment, "FR44306184100047");
+  });
+  it("requires an identifier", () => {
+    assert.equal(eori({}).ok, false);
   });
 });

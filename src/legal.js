@@ -1862,3 +1862,40 @@ export function autoliquidation(input) {
     note: "Collable mention. Does not decide whether reverse charge applies to the deal. Not a tax ruling.",
   };
 }
+
+/** French EORI: FR + SIREN (legal entity). Optional FR + SIRET for an establishment. Format only. */
+export function eori(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.eori || i.value || i.siren || i.siret || "").replace(/\s+/g, "").toUpperCase();
+  const n = digits(raw);
+  if (n.length === 9) {
+    if (!SIREN_RE.test(n)) return { ok: false, missing: ["siren"], error: "Need siren (9) or siret (14) or FR+SIREN." };
+    const code = `FR${n}`;
+    return {
+      ok: true,
+      siren: n,
+      eori: code,
+      establishment: null,
+      mention: `EORI ${code}`,
+      source: "Union Customs Code: FR EORI = FR + SIREN. Format only, not an EOS lookup.",
+      note: "Does not prove the number is registered with customs. Not legal advice.",
+    };
+  }
+  if (n.length === 14) {
+    const chk = siretOk(n);
+    if (!chk.ok) return { ok: false, error: "SIRET checksum failed." };
+    const siren = n.slice(0, 9);
+    const code = `FR${siren}`;
+    const est = `FR${n}`;
+    return {
+      ok: true,
+      siren,
+      eori: code,
+      establishment: est,
+      mention: `EORI ${code}`,
+      source: "Union Customs Code: FR EORI = FR + SIREN (entity). FR+SIRET is the establishment form.",
+      note: "Does not prove the number is registered with customs. Not legal advice.",
+    };
+  }
+  return { ok: false, missing: ["siren"], error: "Need siren (9 digits), siret (14), or FR+SIREN EORI." };
+}

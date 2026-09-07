@@ -46,6 +46,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/net-a-payer` | Invoice footer HT/TVA/TTC + « Net à payer : 1 200,00 € » |
 | `/v1/doc-title` | CGI 289 title: Facture / Avoir / acompte / note d'honoraires / Devis |
 | `/v1/autoliquidation` | Reverse-charge VAT mention (CGI 283 / BTP 283-2 nonies / import) |
+| `/v1/eori` | FR EORI = FR + SIREN (format only, no customs lookup) |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |
