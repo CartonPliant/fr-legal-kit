@@ -1984,3 +1984,68 @@ export function buyer(input) {
     note: "Does not prove the buyer exists. B2C may omit SIRET. Not legal advice.",
   };
 }
+
+const UNITS = {
+  heure: { label: "heure", plural: "heures", symbol: "h" },
+  jour: { label: "jour", plural: "jours", symbol: "j" },
+  mois: { label: "mois", plural: "mois", symbol: "mois" },
+  forfait: { label: "forfait", plural: "forfaits", symbol: "fft" },
+  unite: { label: "unité", plural: "unités", symbol: "u" },
+  kg: { label: "kilogramme", plural: "kilogrammes", symbol: "kg" },
+  m2: { label: "mètre carré", plural: "mètres carrés", symbol: "m²" },
+};
+
+const UNIT_ALIAS = {
+  heure: "heure",
+  h: "heure",
+  hour: "heure",
+  jour: "jour",
+  j: "jour",
+  day: "jour",
+  mois: "mois",
+  month: "mois",
+  forfait: "forfait",
+  fft: "forfait",
+  unite: "unite",
+  unit: "unite",
+  u: "unite",
+  kg: "kg",
+  kilo: "kg",
+  m2: "m2",
+  m2e: "m2",
+};
+
+/** L441-9 quantity unit of measure on an invoice line. */
+export function unit(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.kind || i.unit || i.unite || "heure")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const key = UNIT_ALIAS[raw];
+  if (!key) {
+    return { ok: false, missing: ["kind"], error: "kind: heure|jour|mois|forfait|unite|kg|m2" };
+  }
+  const u = UNITS[key];
+  const qtyRaw = i.qty ?? i.quantity ?? i.qte;
+  const hasQty = qtyRaw !== undefined && qtyRaw !== null && qtyRaw !== "";
+  let qty = null;
+  if (hasQty) {
+    qty = Number(qtyRaw);
+    if (!Number.isFinite(qty) || qty < 0) return { ok: false, error: "qty >= 0." };
+  }
+  const word = qty != null && qty > 1 ? u.plural : u.label;
+  const mention = qty != null ? `${String(qty).replace(".", ",")} ${word}` : `Unité : ${u.label}`;
+  return {
+    ok: true,
+    kind: key,
+    label: u.label,
+    plural: u.plural,
+    symbol: u.symbol,
+    qty,
+    mention,
+    source: "C. com. L441-9 (quantité et dénomination des prestations). Units of measure, format only.",
+    note: "Does not convert units. Not a metrology certificate. Not legal advice.",
+  };
+}

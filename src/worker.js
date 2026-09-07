@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -705,6 +705,18 @@ const ROUTES = {
     },
     fn: buyer,
   },
+  "/v1/unit": {
+    description:
+      "French invoice line unit of measure (L441-9): heure, jour, mois, forfait, unité, kg, m². Optional qty with plural. Format only.",
+    tags: ["france", "invoice", "unite", "quantite", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { kind: "jour", qty: 8 } },
+        output: { type: "json", example: { ok: true, mention: "8 jours" } },
+      },
+    },
+    fn: unit,
+  },
 };
 
 function llmsTxt(base) {
@@ -847,6 +859,9 @@ JSON: { "city": "Pau", "siren": "404833048" }
 
 POST ${base}/v1/buyer
 JSON: { "name": "ACME SAS", "siret": "44306184100047" }
+
+POST ${base}/v1/unit
+JSON: { "kind": "jour", "qty": 8 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

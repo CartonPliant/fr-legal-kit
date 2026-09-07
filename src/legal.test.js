@@ -46,6 +46,7 @@ import {
   duplicata,
   rmMention,
   buyer,
+  unit,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -732,5 +733,21 @@ describe("buyer", () => {
   });
   it("requires a name", () => {
     assert.equal(buyer({ siret: "44306184100047" }).ok, false);
+  });
+});
+
+describe("unit", () => {
+  it("defaults to heure", () => {
+    const r = unit({});
+    assert.equal(r.ok, true);
+    assert.equal(r.kind, "heure");
+    assert.equal(r.mention, "Unité : heure");
+  });
+  it("pluralizes 8 jours", () => {
+    const r = unit({ kind: "jour", qty: 8 });
+    assert.equal(r.mention, "8 jours");
+  });
+  it("rejects an unknown unit", () => {
+    assert.equal(unit({ kind: "parsec" }).ok, false);
   });
 });
