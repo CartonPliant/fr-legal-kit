@@ -25,6 +25,7 @@ import {
   sirenFromSiret,
   quoteValidity,
   apeNaf,
+  postcodeFr,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -346,5 +347,15 @@ describe("apeNaf", () => {
   });
   it("rejects 4 digits without a letter", () => {
     assert.equal(apeNaf({ code: "6201" }).ok, false);
+  });
+});
+
+describe("postcodeFr", () => {
+  it("maps Paris, Corsica and Guadeloupe prefixes", () => {
+    assert.equal(postcodeFr({ postcode: "75001" }).department, "75");
+    assert.equal(postcodeFr({ cp: "20000" }).department, "2A");
+    assert.equal(postcodeFr({ cp: "20200" }).department, "2B");
+    assert.equal(postcodeFr({ postcode: "97100" }).department, "971");
+    assert.equal(postcodeFr({ postcode: "67000" }).alsace_moselle, true);
   });
 });

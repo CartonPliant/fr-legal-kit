@@ -1083,3 +1083,31 @@ export function apeNaf(input) {
     note: "Does not prove the code is assigned. APE on invoices is usage for sociétés, not a universal L441-9 field. Not legal advice.",
   };
 }
+
+/** French 5-digit postcode → department prefix. No address lookup. */
+export function postcodeFr(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const n = digits(i.postcode || i.cp || i.code_postal || i.code || i.value);
+  if (n.length !== 5) {
+    return { ok: false, missing: ["postcode"], error: "French postcode: 5 digits." };
+  }
+  const dep2 = n.slice(0, 2);
+  let department = dep2;
+  let scope = "metropolitan";
+  if (dep2 === "20") {
+    department = Number(n.slice(0, 3)) < 202 ? "2A" : "2B";
+    scope = "corse";
+  } else if (n.startsWith("97") || n.startsWith("98")) {
+    department = n.slice(0, 3);
+    scope = n.startsWith("98") ? "monaco-or-overseas" : "overseas";
+  }
+  return {
+    ok: true,
+    postcode: n,
+    department,
+    scope,
+    alsace_moselle: department === "67" || department === "68" || department === "57",
+    source: "La Poste 5-digit format. Corsica 200/201 → 2A, 202+ → 2B (usage).",
+    note: "Format and department prefix only. Does not prove the address exists. Not legal advice.",
+  };
+}

@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -443,6 +443,18 @@ const ROUTES = {
     },
     fn: apeNaf,
   },
+  "/v1/postcode-fr": {
+    description:
+      "French 5-digit postcode: department prefix (Corsica 2A/2B, overseas 97x). No address lookup. Flags Alsace-Moselle 57/67/68.",
+    tags: ["france", "postcode", "invoice", "address"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { postcode: "67000" } },
+        output: { type: "json", example: { ok: true, department: "67", alsace_moselle: true } },
+      },
+    },
+    fn: postcodeFr,
+  },
 };
 
 function llmsTxt(base) {
@@ -522,6 +534,9 @@ JSON: { "quote_date": "2026-09-07", "validity_days": 30 }
 
 POST ${base}/v1/ape-naf
 JSON: { "code": "62.01Z" }
+
+POST ${base}/v1/postcode-fr
+JSON: { "postcode": "67000" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
