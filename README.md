@@ -4,6 +4,10 @@ x402 API for AI agents. Offline French legal helpers. **$0.01 USDC** on Base per
 
 Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 
+MCP registry: [`io.github.CartonPliant/fr-legal-kit`](https://registry.modelcontextprotocol.io/v0.1/servers?search=fr-legal-kit)  
+x402scan: https://www.x402scan.com/server/edab7902-3c37-4463-97ef-fa115c225b8d  
+AgentCash: `npx agentcash add https://fr-legal-kit.monnet-yanis1.workers.dev`
+
 ## Routes
 
 | POST | What |

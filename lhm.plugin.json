@@ -1,0 +1,559 @@
+{
+  "author": "CartonPliant",
+  "authorUrl": "https://github.com/CartonPliant",
+  "cloudEndpoint": "https://fr-legal-kit.monnet-yanis1.workers.dev/mcp",
+  "description": "x402 French legal kit for AI agents: e-invoice calendar, L441-10 penalties, SIRET/IBAN checksums. Offline, no scrape.",
+  "homepage": "https://github.com/CartonPliant/fr-legal-kit",
+  "identifier": "cartonpliant-fr-legal-kit",
+  "name": "fr-legal-kit",
+  "tags": ["france", "legal", "invoice", "x402", "siret"],
+  "prompts": [],
+  "resources": [],
+  "tools": [
+    {
+      "name": "late_penalties",
+      "description": "French L441-10 late-payment: BCE MRO+10pts interest + 40€ indemnity (D.441-5) from amount_ttc and days_late. Default MRO 2.40% (H2 2026, ECB). No live BCE fetch. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "einvoice_who",
+      "description": "French e-invoice calendar: who must receive (2026-09-01 all) vs emit (GE/ETI 2026, PME/micro 2027). Size in, dates out. No registry lookup. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "check_siret",
+      "description": "SIRET/SIREN checksum (Luhn / La Poste). Does not call INSEE. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "check_iban",
+      "description": "IBAN ISO 13616 checksum. Does not prove the account exists. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "due_date",
+      "description": "French invoice due date: invoice_date + net_days (calendar). Also next_open_day skipping weekends + L.3133-1 holidays 2026–2027. No live calendar fetch. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "tva_rate",
+      "description": "Indicative FR VAT rate table: standard 20 / intermediate 10 / reduced 5.5 / super_reduced 2.1 / exempt. Not a tax ruling. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "holidays",
+      "description": "French metropolitan public holidays for 2026 or 2027 (C. trav. L.3133-1). Optional Alsace-Moselle extras. No live fetch. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "payment_term_max",
+      "description": "Statutory ceiling on agreed FR B2B payment terms: 60 days after invoice issue, or 45 days end-of-month if stipulated (L441-10 I). Not a recommended term. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "mention_fields",
+      "description": "Checklist of French invoice/quote legal mention fields (L441-9, L441-10, 293 B). JSON in, list of required ids out. No lookup. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "vat_key",
+      "description": "French intra-community VAT identifier from SIREN: FR + 2-digit key + SIREN. Key = (12 + 3*(siren%97))%97 (CGI 286 ter). Not a VIES proof. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "penalty_text",
+      "description": "Statutory L441-10 / D.441-5 invoice mention strings (rate BCE MRO+10 pts + 40 € indemnity). No amount required. Default MRO 2.40% H2 2026. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "franchise_293b",
+      "description": "CGI 293 B franchise-en-base 2026 thresholds (services 37 500/41 250, goods 85 000/93 500) plus the statutory invoice mention. 25 000 € unique threshold was abandoned. Not a tax ruling. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "dunning_steps",
+      "description": "Suggested FR B2B dunning calendar after the due date (J+1 / J+8 / J+15). L441-10 penalties accrue without a reminder. Usage, not a statutory timetable. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "open_days",
+      "description": "Inclusive count of French metropolitan open days between two dates (skip Sat/Sun + L.3133-1 holidays 2026–2027). Optional Alsace-Moselle extras. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "invoice_numbering",
+      "description": "French invoice numbering helper (C. com. L441-9): unique chronological sequence, no gaps. Returns next number from last_number plus the statutory rules. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "amount_words",
+      "description": "French amount in words for invoices (douze euros et quarante centimes). Traditional hyphenation. Not a statutory mention. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "alsace_holidays",
+      "description": "Alsace-Moselle extra public holidays (Good Friday + St Stephen) plus the combined 2026–2027 calendar. In addition to L.3133-1 metropolitan days. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "due_date_eom",
+      "description": "French 45-days-end-of-month due date (L441-10 I derogation). Statutory reading: 45 days after month-end of the invoice. Alternate usage: +45 then EOM. Must be stipulated. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "ht_ttc",
+      "description": "French HT ↔ TTC using CGI indicative rates (20 / 10 / 5.5 / 2.1 / 0). Pass exactly one of amount_ht or amount_ttc. Not a tax ruling. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "days_late",
+      "description": "Calendar days late from due_date to as_of (L441-10 periods are calendar). Also accepts invoice_date + net_days. Feed days_late into /v1/late-penalties. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "siren_from_siret",
+      "description": "Split a French SIRET into SIREN + NIC, checksum both (Luhn / La Poste), and compute the CGI 286 ter VAT key. No INSEE lookup. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "quote_validity",
+      "description": "French quote (devis) validity calendar. Default 30 days from quote_date. Commercial usage, not L441-9. Returns expiry and a collable mention. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "ape_naf",
+      "description": "French APE/NAF rev.2 format check: 4 digits + 1 letter (62.01Z). No INSEE lookup of the label. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "postcode_fr",
+      "description": "French 5-digit postcode: department prefix (Corsica 2A/2B, overseas 97x). No address lookup. Flags Alsace-Moselle 57/67/68. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "legal_form",
+      "description": "Extra French invoice mentions by legal form (EI/micro vs SARL/SAS/SA/SCI): EI quality, 293 B, capital, RCS. On top of /v1/mention-fields. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "iban_fr",
+      "description": "French IBAN structure: 27 chars, bank/branch/account/RIB key, plus ISO 13616 checksum. Does not prove the account exists. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "credit_note",
+      "description": "French credit note (avoir): next number in a dedicated AV- sequence, collable CGI 289 mention referencing the original invoice, optional HT/TTC reversal. Does not reuse the cancelled invoice number (L441-9). Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "phone_fr",
+      "description": "French phone format (ARCEP numbering plan): 10-digit national or +33/0033 → E.164, grouped mention, kind mobile/geo/voip/overseas. No subscriber lookup. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "capital_social",
+      "description": "French share-capital invoice mention for sociétés (SAS/SARL/SA/SCI): 'au capital de 1 000,00 €', optional variable capital. EI/micro have no capital. Format only, not a Kbis. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "rcs_mention",
+      "description": "French RCS invoice mention: 'RCS Pau 404 833 048' from greffe city + SIREN/SIRET. Format only, not a Kbis lookup. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "invoice_currency",
+      "description": "French invoice currency: EUR is legal tender. Foreign ISO 4217 (USD/GBP/CHF/CAD/JPY) allowed; VAT is expressed in euros. Offline subset, no FX rate. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "escompte",
+      "description": "French invoice early-payment discount mention (L441-9 / L441-10): collable 'Pas d'escompte pour paiement anticipé.' or 'Escompte de X % pour paiement sous N jours.' Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "acompte",
+      "description": "French down-payment (acompte) invoice: next AC- number, 30% default or explicit %, remaining TTC, collable CGI 289 mention. Own L441-9 sequence. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "date_fr",
+      "description": "French invoice date format: YYYY-MM-DD → JJ/MM/AAAA, weekday, long form, collable 'Date de facture : …'. L441-9 emission date. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "payment_means",
+      "description": "French invoice means-of-payment mention (L441-9): virement, chèque, CB, espèces, prélèvement, LCR. Default virement. Collable string. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "interest_start",
+      "description": "L441-10: calendar day late-payment interest starts (the day after the due date), without a reminder. Accepts due_date or invoice_date + net_days. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "siege_social",
+      "description": "French siège social invoice mention (L441-9): street + postcode + city, department prefix, Alsace-Moselle flag. Format only, not a Kbis. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "net_a_payer",
+      "description": "French invoice footer: HT / VAT / TTC plus collable 'Net à payer : 1 200,00 €'. Same CGI rates as /v1/ht-ttc. Pass exactly one of amount_ht or amount_ttc. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "doc_title",
+      "description": "CGI 289 document title: Facture, Avoir, Facture d'acompte, Note d'honoraires (still an invoice), or Devis (not L441-9). Optional number → 'Facture n° …'. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "autoliquidation",
+      "description": "French reverse-charge VAT mention (autoliquidation): intra-EU CGI 283, construction 283-2 nonies, or import. Invoice shows HT; VAT due by the customer. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "eori",
+      "description": "French EORI format: FR + SIREN (legal entity). From a SIRET also returns FR+SIRET establishment form. Format only, no customs lookup. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "duplicata",
+      "description": "French invoice duplicata: same original number stamped DUPLICATA. Not a new L441-9 number and not a credit note. Collable 'Ne pas comptabiliser une seconde fois.' Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "rm_mention",
+      "description": "French artisan RM invoice mention: 'RM Pau 404 833 048' from city + SIREN/SIRET. Format only. RNE replaced RM for new filings in 2023; invoice usage still shows RM. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "buyer",
+      "description": "French invoice buyer identification (L441-9): client name + optional SIRET/SIREN + city. B2C may omit SIRET. Format only. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "unit",
+      "description": "French invoice line unit of measure (L441-9): heure, jour, mois, forfait, unité, kg, m². Optional qty with plural. Format only. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "cgv",
+      "description": "French CGV invoice mention (C. com. L441-6): 'Nos conditions générales de vente s'appliquent.' Optional URL. A mention does not replace prior communication to the professional buyer. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "reserve_propriete",
+      "description": "French retention-of-title invoice clause (C. com. L.624-16): goods remain the seller's until full payment. Not for pure services. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "garantie_legale",
+      "description": "French legal warranty of conformity (C. conso L.217-3): 2 years from delivery for consumer goods. Does not apply to professional buyers. Optional delivery_date → expiry. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "mediateur",
+      "description": "French consumer mediator mention (C. conso L.612-1). Required for B2C. Pass name + url of the designated mediator. Does not apply to professional buyers. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "delivery",
+      "description": "French invoice date of supply (CGI 289 / 242 nonies A): delivery or service execution vs invoice date. Distinct dates get an explicit mention. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "line",
+      "description": "French invoice line (L441-9): designation + optional quantity/unit + unit price HT. Format only, no line-total math. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "page",
+      "description": "French multi-page invoice footer: Page X/Y. Sequential pages of one invoice (L441-9 numbering is the invoice number, not the page). Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "retractation",
+      "description": "French 14-day consumer withdrawal (C. conso L.221-18 / L.221-19). Services: from contract date. Goods: from delivery. Does not apply to professional buyers. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "conservation",
+      "description": "French invoice retention: 10 years commercial (C. com. L123-22) and 6 years tax (LPF L102 B) from the invoice date. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "prescription",
+      "description": "French limitation period for an unpaid invoice: 5 years B2B (C. com. L110-4) or 2 years against a consumer (C. conso L.218-2), from the due date. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "garantie_commerciale",
+      "description": "French commercial warranty mention (C. conso L.217-21), distinct from the 2-year legal warranty. Optional months + delivery_date → expiry. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "export",
+      "description": "French VAT exemption mention: extra-EU export CGI 262 I, or intra-EU supply CGI 262 ter I. Distinct from reverse-charge /v1/autoliquidation. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "proforma",
+      "description": "French pro forma header: this document is not an invoice (CGI 289). Optional number. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "jours_francs",
+      "description": "French jours francs (C. proc. civ. 642): start day excluded; Saturday/Sunday/holiday rolls to the next open day. Métropole holidays 2026–2027. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "clause_penale",
+      "description": "French contractual penalty clause (C. civ. 1231-5). Optional amount. Distinct from statutory L441-10 late-payment. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "periode",
+      "description": "French invoice billing period for continuous services (CGI 289): from + to dates as a collable mention. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "autofacturation",
+      "description": "French self-billing stamp (CGI 289): the word Autofacturation on each invoice. Optional seller name. Prior agreement is the buyer's problem. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "rgpd",
+      "description": "French invoice personal-data footer: RGPD art. 6.1.b/c legal bases + 10-year keep (C. com. L123-22). Optional controller name. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "langue",
+      "description": "French invoice language mention: Toubon 94-665 for B2C in France; B2B defaults to French for tax control. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "commande",
+      "description": "French invoice purchase-order reference (number + optional date). Usage for identifying the operation (L441-9). Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "debours",
+      "description": "French disbursements (débours): paid in the client's name, out of the VAT base (CGI 267). Optional amount + label. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "arrhes",
+      "description": "French arrhes (C. civ. 1590), distinct from acompte: buyer forfeits, seller returns double. Requires amount_eur. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "prorata",
+      "description": "Calendar prorata of a monthly HT amount over an inclusive from/to window (days / days in the start month). Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  ],
+  "version": "1.1.0"
+}
