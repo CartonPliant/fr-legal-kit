@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -344,6 +344,18 @@ const ROUTES = {
     },
     fn: invoiceNumbering,
   },
+  "/v1/amount-words": {
+    description:
+      "French amount in words for invoices (douze euros et quarante centimes). Traditional hyphenation. Not a statutory mention.",
+    tags: ["france", "invoice", "montant", "lettres"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { amount_eur: 12.4 } },
+        output: { type: "json", example: { ok: true, words: "douze euros et quarante centimes" } },
+      },
+    },
+    fn: amountWords,
+  },
 };
 
 function llmsTxt(base) {
@@ -399,6 +411,9 @@ JSON: { "from": "2026-04-03", "to": "2026-04-07", "alsace_moselle": false }
 
 POST ${base}/v1/invoice-numbering
 JSON: { "last_number": "F-2026-0042" }
+
+POST ${base}/v1/amount-words
+JSON: { "amount_eur": 12.4 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

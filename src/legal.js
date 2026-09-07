@@ -657,6 +657,114 @@ export function invoiceNumbering(input) {
   };
 }
 
+const FR_U = [
+  "zéro",
+  "un",
+  "deux",
+  "trois",
+  "quatre",
+  "cinq",
+  "six",
+  "sept",
+  "huit",
+  "neuf",
+  "dix",
+  "onze",
+  "douze",
+  "treize",
+  "quatorze",
+  "quinze",
+  "seize",
+];
+
+function frBelow20(n) {
+  if (n < 17) return FR_U[n];
+  return "dix-" + FR_U[n - 10];
+}
+
+function frBelow100(n) {
+  if (n < 20) return frBelow20(n);
+  const tens = Math.floor(n / 10);
+  const u = n % 10;
+  if (tens === 7) {
+    if (n === 71) return "soixante et onze";
+    return "soixante-" + frBelow20(n - 60);
+  }
+  if (tens === 8) {
+    if (u === 0) return "quatre-vingts";
+    return "quatre-vingt-" + FR_U[u];
+  }
+  if (tens === 9) return "quatre-vingt-" + frBelow20(n - 80);
+  const names = ["", "", "vingt", "trente", "quarante", "cinquante", "soixante"];
+  if (u === 0) return names[tens];
+  if (u === 1) return names[tens] + " et un";
+  return names[tens] + "-" + FR_U[u];
+}
+
+function frBelow1000(n) {
+  if (n < 100) return frBelow100(n);
+  const c = Math.floor(n / 100);
+  const r = n % 100;
+  if (r === 0) return c === 1 ? "cent" : FR_U[c] + " cents";
+  return (c === 1 ? "cent" : FR_U[c] + " cent") + " " + frBelow100(r);
+}
+
+function frInt(n) {
+  if (n === 0) return "zéro";
+  if (n < 1000) return frBelow1000(n);
+  if (n < 1e6) {
+    const th = Math.floor(n / 1000);
+    const r = n % 1000;
+    const tw = th === 1 ? "mille" : frBelow1000(th) + " mille";
+    return r === 0 ? tw : tw + " " + frBelow1000(r);
+  }
+  const m = Math.floor(n / 1e6);
+  const r = n % 1e6;
+  const mw = m === 1 ? "un million" : frBelow1000(m) + " millions";
+  return r === 0 ? mw : mw + " " + frInt(r);
+}
+
+/** French amount-in-words for invoices (usage, not a statutory mention). */
+export function amountWords(input) {
+  const i = input && typeof input === "object" ? input : {};
+  let euros;
+  let cents;
+  if (i.euros !== undefined || i.centimes !== undefined) {
+    euros = Number(i.euros ?? 0);
+    cents = Number(i.centimes ?? 0);
+  } else {
+    let raw = i.amount_eur ?? i.amount ?? i.value;
+    if (typeof raw === "string") raw = raw.replace(/\s/g, "").replace(",", ".");
+    raw = Number(raw);
+    if (!Number.isFinite(raw) || raw < 0) {
+      return { ok: false, missing: ["amount_eur"], error: "amount_eur >= 0, max 999 999 999.99" };
+    }
+    const rounded = Math.round(raw * 100);
+    euros = Math.floor(rounded / 100);
+    cents = rounded % 100;
+  }
+  if (!Number.isFinite(euros) || !Number.isInteger(euros) || euros < 0 || euros > 999999999) {
+    return { ok: false, error: "euros must be an integer 0–999999999." };
+  }
+  if (!Number.isFinite(cents) || !Number.isInteger(cents) || cents < 0 || cents > 99) {
+    return { ok: false, error: "centimes must be an integer 0–99." };
+  }
+  const ew = frInt(euros);
+  const cw = frInt(cents);
+  const euroWord = euros <= 1 ? "euro" : "euros";
+  const centWord = cents <= 1 ? "centime" : "centimes";
+  const words = cents === 0 ? `${ew} ${euroWord}` : `${ew} ${euroWord} et ${cw} ${centWord}`;
+  return {
+    ok: true,
+    euros,
+    centimes: cents,
+    words,
+    words_upper: words.toUpperCase(),
+    source: "French invoice amount-in-words (usage). Traditional forms: soixante-dix, quatre-vingts.",
+    note: "Not a statutory mention. Cheque/invoice wording helper. Not a legal opinion.",
+  };
+}
+
 /** Statutory ceiling on agreed B2B payment terms (L441-10 I). */
 export function paymentTermMax(input) {
   const i = input && typeof input === "object" ? input : {};

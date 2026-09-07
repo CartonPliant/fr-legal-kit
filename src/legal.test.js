@@ -17,6 +17,7 @@ import {
   dunningSteps,
   openDays,
   invoiceNumbering,
+  amountWords,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -232,5 +233,22 @@ describe("invoiceNumbering", () => {
     assert.equal(r.ok, true);
     assert.equal(r.next_number, null);
     assert.ok(r.rules.length >= 4);
+  });
+});
+
+describe("amountWords", () => {
+  it("writes 12,40 €", () => {
+    const r = amountWords({ amount_eur: 12.4 });
+    assert.equal(r.ok, true);
+    assert.equal(r.words, "douze euros et quarante centimes");
+  });
+  it("handles 80, 71, 200 and 1234.56", () => {
+    assert.equal(amountWords({ amount_eur: 80 }).words, "quatre-vingts euros");
+    assert.equal(amountWords({ amount_eur: 71 }).words, "soixante et onze euros");
+    assert.equal(amountWords({ amount_eur: 200 }).words, "deux cents euros");
+    assert.equal(
+      amountWords({ amount_eur: 1234.56 }).words,
+      "mille deux cent trente-quatre euros et cinquante-six centimes",
+    );
   });
 });
