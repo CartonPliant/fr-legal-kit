@@ -2216,3 +2216,55 @@ export function delivery(input) {
     note: "Collable mention. Does not prove the goods moved that day. Not legal advice.",
   };
 }
+
+/** L441-9 invoice line: designation + optional qty/unit + unit price HT. */
+export function line(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const description = String(i.description || i.designation || i.label || i.libelle || "").trim();
+  if (!description) {
+    return { ok: false, missing: ["description"], error: "description of the good or service (L441-9)." };
+  }
+  const raw = String(i.kind || i.unit || i.unite || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const key = raw ? UNIT_ALIAS[raw] : null;
+  if (raw && !key) {
+    return { ok: false, missing: ["kind"], error: "kind: heure|jour|mois|forfait|unite|kg|m2" };
+  }
+  const qtyRaw = i.qty ?? i.quantity ?? i.qte;
+  const hasQty = qtyRaw !== undefined && qtyRaw !== null && qtyRaw !== "";
+  let qty = null;
+  if (hasQty) {
+    qty = Number(qtyRaw);
+    if (!Number.isFinite(qty) || qty < 0) return { ok: false, error: "qty >= 0." };
+  }
+  const priceRaw = i.unit_ht ?? i.prix_unitaire_ht ?? i.unit_price_ht;
+  let unit_ht = null;
+  if (priceRaw !== undefined && priceRaw !== null && priceRaw !== "") {
+    unit_ht = Number(String(priceRaw).replace(/\s/g, "").replace(",", "."));
+    if (!Number.isFinite(unit_ht) || unit_ht < 0) return { ok: false, error: "unit_ht >= 0." };
+  }
+  const parts = [`Désignation : ${description}`];
+  if (qty != null && key) {
+    const u = UNITS[key];
+    const word = qty > 1 ? u.plural : u.label;
+    parts.push(`${String(qty).replace(".", ",")} ${word}`);
+  } else if (qty != null) {
+    parts.push(`qté ${String(qty).replace(".", ",")}`);
+  } else if (key) {
+    parts.push(UNITS[key].label);
+  }
+  if (unit_ht != null) parts.push(`${formatEurFr(unit_ht)} HT l'unité`);
+  return {
+    ok: true,
+    description,
+    kind: key,
+    qty,
+    unit_ht,
+    mention: parts.join(" — "),
+    source: "C. com. L441-9 (dénomination, quantité, prix unitaire HT).",
+    note: "Format only. Does not compute the line total. Not legal advice.",
+  };
+}

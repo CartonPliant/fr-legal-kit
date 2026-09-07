@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -780,6 +780,18 @@ const ROUTES = {
     },
     fn: delivery,
   },
+  "/v1/line": {
+    description:
+      "French invoice line (L441-9): designation + optional quantity/unit + unit price HT. Format only, no line-total math.",
+    tags: ["france", "invoice", "line", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { description: "Audit comptable", qty: 8, kind: "jour", unit_ht: 450 } },
+        output: { type: "json", example: { ok: true, mention: "Désignation : Audit comptable — 8 jours — 450,00 € HT l'unité" } },
+      },
+    },
+    fn: line,
+  },
 };
 
 function llmsTxt(base) {
@@ -940,6 +952,9 @@ JSON: { "name": "CNPM", "url": "https://www.cnpm-mediation-consommation.eu" }
 
 POST ${base}/v1/delivery
 JSON: { "invoice_date": "2026-09-07", "delivery_date": "2026-09-10" }
+
+POST ${base}/v1/line
+JSON: { "description": "Audit comptable", "qty": 8, "kind": "jour", "unit_ht": 450 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

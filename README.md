@@ -56,6 +56,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/garantie-legale` | Consumer legal warranty 2 years from delivery (C. conso L.217-3) |
 | `/v1/mediateur` | Consumer mediator mention (C. conso L.612-1). B2C only |
 | `/v1/delivery` | Date of supply vs invoice date (CGI 289 / 242 nonies A) |
+| `/v1/line` | L441-9 invoice line: designation + qty/unit + unit price HT |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

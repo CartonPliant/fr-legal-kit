@@ -52,6 +52,7 @@ import {
   garantieLegale,
   mediateur,
   delivery,
+  line,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -845,5 +846,23 @@ describe("delivery", () => {
   it("labels a service as date d'exécution", () => {
     const r = delivery({ delivery_date: "2026-09-07", kind: "services" });
     assert.match(r.mention, /exécution/);
+  });
+});
+
+describe("line", () => {
+  it("formats designation, qty and unit price", () => {
+    const r = line({ description: "Audit comptable", qty: 8, kind: "jour", unit_ht: 450 });
+    assert.equal(r.ok, true);
+    assert.match(r.mention, /Audit comptable/);
+    assert.match(r.mention, /8 jours/);
+    assert.match(r.mention, /450,00/);
+  });
+  it("requires a description", () => {
+    const r = line({});
+    assert.equal(r.ok, false);
+  });
+  it("works with description only", () => {
+    const r = line({ description: "Prestation de conseil" });
+    assert.match(r.mention, /Prestation de conseil/);
   });
 });
