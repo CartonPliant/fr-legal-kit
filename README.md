@@ -27,6 +27,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/ht-ttc` | HT ↔ TTC at CGI rates 20 / 10 / 5.5 / 2.1 / 0 |
 | `/v1/days-late` | Calendar days from due_date to as_of (input for late-penalties) |
 | `/v1/siren-from-siret` | SIRET → SIREN + NIC + checksums + VAT key (no INSEE) |
+| `/v1/quote-validity` | Devis validity calendar (default 30 days, usage not L441-9) |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

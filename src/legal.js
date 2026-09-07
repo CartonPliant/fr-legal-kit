@@ -1037,3 +1037,29 @@ export function sirenFromSiret(input) {
     note: "Checksum only. Does not prove the number exists at INSEE/Sirene. Not a VIES proof.",
   };
 }
+
+/** Quote (devis) validity calendar. Commercial usage, not L441-9. */
+export function quoteValidity(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const start = parseISODate(i.quote_date || i.devis_date || i.date);
+  const days = Number(i.validity_days ?? i.net_days ?? 30);
+  const alsace = Boolean(i.alsace_moselle);
+  if (!start) {
+    return { ok: false, missing: ["quote_date"], error: "quote_date YYYY-MM-DD." };
+  }
+  if (!Number.isFinite(days) || days < 1 || days > 3650) {
+    return { ok: false, missing: ["validity_days"], error: "validity_days 1–3650." };
+  }
+  const expiry = addDays(start, days);
+  const open = nextOpenDay(expiry, alsace);
+  return {
+    ok: true,
+    quote_date: ymd(start),
+    validity_days: days,
+    expires_on: ymd(expiry),
+    next_open_day: ymd(open),
+    mention: `Devis valable ${days} jours à compter du ${ymd(start)} (jusqu'au ${ymd(expiry)}).`,
+    source: "Commercial usage. L441-9 numbering/mentions apply to invoices, not to quote duration. Common 30/60/90 days.",
+    note: "Not a statutory term. Put the duration on the quote. Not legal advice.",
+  };
+}

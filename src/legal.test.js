@@ -23,6 +23,7 @@ import {
   htTtc,
   daysLate,
   sirenFromSiret,
+  quoteValidity,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -319,5 +320,15 @@ describe("sirenFromSiret", () => {
     assert.equal(r.siren, "443061841");
     assert.equal(r.nic, "00047");
     assert.equal(r.vat_fr, "FR64443061841");
+  });
+});
+
+describe("quoteValidity", () => {
+  it("adds 30 days from 2026-09-07", () => {
+    const r = quoteValidity({ quote_date: "2026-09-07" });
+    assert.equal(r.ok, true);
+    assert.equal(r.validity_days, 30);
+    assert.equal(r.expires_on, "2026-10-07");
+    assert.match(r.mention, /30 jours/);
   });
 });

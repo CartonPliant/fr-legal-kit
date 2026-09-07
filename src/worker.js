@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -419,6 +419,18 @@ const ROUTES = {
     },
     fn: sirenFromSiret,
   },
+  "/v1/quote-validity": {
+    description:
+      "French quote (devis) validity calendar. Default 30 days from quote_date. Commercial usage, not L441-9. Returns expiry and a collable mention.",
+    tags: ["france", "devis", "quote", "validity"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { quote_date: "2026-09-07", validity_days: 30 } },
+        output: { type: "json", example: { ok: true, expires_on: "2026-10-07" } },
+      },
+    },
+    fn: quoteValidity,
+  },
 };
 
 function llmsTxt(base) {
@@ -492,6 +504,9 @@ JSON: { "due_date": "2026-09-07", "as_of": "2026-09-25" }
 
 POST ${base}/v1/siren-from-siret
 JSON: { "siret": "44306184100047" }
+
+POST ${base}/v1/quote-validity
+JSON: { "quote_date": "2026-09-07", "validity_days": 30 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
