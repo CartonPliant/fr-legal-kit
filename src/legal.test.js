@@ -44,6 +44,7 @@ import {
   autoliquidation,
   eori,
   duplicata,
+  rmMention,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -694,5 +695,22 @@ describe("duplicata", () => {
   });
   it("requires original_number", () => {
     assert.equal(duplicata({}).ok, false);
+  });
+});
+
+describe("rmMention", () => {
+  it("groups SIREN with RM and the city", () => {
+    const r = rmMention({ city: "Pau", siren: "404833048" });
+    assert.equal(r.ok, true);
+    assert.equal(r.mention, "RM Pau 404 833 048");
+    assert.equal(r.register, "rm");
+  });
+  it("accepts a SIRET", () => {
+    const r = rmMention({ ville: "Bayonne", siret: "44306184100047" });
+    assert.equal(r.siren, "443061841");
+    assert.equal(r.mention, "RM Bayonne 443 061 841");
+  });
+  it("requires the city", () => {
+    assert.equal(rmMention({ siren: "404833048" }).ok, false);
   });
 });

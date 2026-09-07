@@ -48,6 +48,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/autoliquidation` | Reverse-charge VAT mention (CGI 283 / BTP 283-2 nonies / import) |
 | `/v1/eori` | FR EORI = FR + SIREN (format only, no customs lookup) |
 | `/v1/duplicata` | Copy of an invoice: same number, stamped DUPLICATA (not a new invoice) |
+| `/v1/rm-mention` | Artisan RM + city + SIREN (`RM Pau 404 833 048`). Format, not a D1 |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

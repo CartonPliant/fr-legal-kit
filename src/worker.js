@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -681,6 +681,18 @@ const ROUTES = {
     },
     fn: duplicata,
   },
+  "/v1/rm-mention": {
+    description:
+      "French artisan RM invoice mention: 'RM Pau 404 833 048' from city + SIREN/SIRET. Format only. RNE replaced RM for new filings in 2023; invoice usage still shows RM.",
+    tags: ["france", "invoice", "rm", "artisan", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { city: "Pau", siren: "404833048" } },
+        output: { type: "json", example: { ok: true, mention: "RM Pau 404 833 048" } },
+      },
+    },
+    fn: rmMention,
+  },
 };
 
 function llmsTxt(base) {
@@ -817,6 +829,9 @@ JSON: { "siren": "404833048" }
 
 POST ${base}/v1/duplicata
 JSON: { "original_number": "F-2026-0042" }
+
+POST ${base}/v1/rm-mention
+JSON: { "city": "Pau", "siren": "404833048" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

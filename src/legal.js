@@ -1928,3 +1928,20 @@ export function duplicata(input) {
     note: "A duplicata is a copy, not a credit note and not a new invoice. Not a legal opinion.",
   };
 }
+
+/** RM (répertoire des métiers) invoice mention for artisans. Format only. */
+export function rmMention(input) {
+  const r = rcsMention(input);
+  if (!r.ok) return r;
+  return {
+    ok: true,
+    city: r.city,
+    siren: r.siren,
+    grouped: r.grouped,
+    register: "rm",
+    mention: `RM ${r.city} ${r.grouped}`,
+    source:
+      "Répertoire des métiers (artisans): RM + ville + SIREN. RNE replaced RM/RCS for new filings in 2023; invoice usage still shows RM. Format only.",
+    note: "Does not prove the artisan is registered. Not a D1 extract. Not legal advice.",
+  };
+}
