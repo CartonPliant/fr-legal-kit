@@ -5,6 +5,9 @@ const AMOUNT = "10000"; // $0.01 USDC
 const NETWORK = "eip155:8453";
 const DEFAULT_FACILITATOR = "https://facilitator.payai.network";
 const SERVICE = "fr-legal-kit";
+// 16+32 ICO (navy / gold "402") for x402scan / browsers.
+const FAVICON_ICO_B64 =
+  "AAABAAIAEBAAAAAAIABZAgAAJgAAACAgAAAAACAATwIAAH8CAACJUE5HDQoaCgAAAA1JSERSAAAAEAAAABAIBgAAAB/z/2EAAAIgSURBVHicpZO/axRBFMc/M7O7l9zlkotREongiYXBRhQbkcM24o9Gq1Q2WlmIEOwFK0XzJ9hoLYJiJ2IRg4WFrQjK4Uki3uV+ebuzOyMz6x0xnIL4YHeZmfd977vf7zwxNVe1/YHB9Az/ErIkKU5IgmRgqR0vca5WxlgQgHCvMWEtWAcW8Ox1h/V3fWTSyzz44plp0oEhDARSjn/cmctxuQ7jsIGvDDx+sc3ttTqoEDK3syscKyUg1SQISpM5zWB4VilLgiCksi8k1gYlBVlmfXHXOdHWf3vNPDdN8yZy2MAY/OaPOAcPEkshEl6o7W7G7LSiXJRobbwWwwhGqnpGlqVqgTvX57lxt8G1S3t88pOXbc7XpggjydrDLQaxJQrF7wwyY1EFwcrZCu2e4dSxIvVNzZctzdHDBW7da3BwIWRxMSJJzMgpmXcXdPuG0yfLHKkW/PrE0iRxbFFK8H07Y/XqPFutjPU3babLCuM8HxYw1lIuKjbedll98JV2L+PR8xaHDkTsrQTo1HLlwiyfG5r9CxFa2xGDYKdNcWL51Ei4eb9Br2/4UE+8x7G2bLz/yFwloNkySCWwv5QMRiLK3C6nurOxNCmJ4/x6Cym8Lp2+9v8fKtDpDgYWaHUMOtV823SK/uUimZRmxzXYdZFWlmeIsBSnlJ+JceGs7nczLi/P8PRVOy8QlZQfDL+YkF6wPw2TI+ZyHNhhHFb87zj/BFkO8308EBKIAAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACFklEQVR4nGPkFlL4zzCAgGkgLR8UDmBB5tzdrE4XS5V9bw7SEMDmQmoCbCHMxDDAgGnUAQyjDhgqDpjfIMNwbIEynB/hzs9wbKEyw4lFygxxPoJgMXY2RobOfAmG8ytUGc4uU2GoSRFjYGQkoxxAB5EeAgx2xtwML9/+AfPlJFkZmrMlGGqnvWT4+fMfQ3ehJMOJy98YtJXYGbxteRmiKh8z/Pn7n2HzRAWGy3d+MGw88ImBbAfISrAyVCWLMjx49ouBkx0SYDYG3AxMjAwMh85+Zfj24x/Yl3ZG3Axz1r9jWL8fYhkPFxPDv/8MDMoybORHARMjA0N3gSTDzmNfGA6f/wYXFxeCuPvzt78Mn7/9A7PFoGIgAHJQQ7o4WP+l2z/Id0BygBCDrDgrQ+OslyjiKPH6H7M50ZAhzhDoxMdw8so3hj0nv+B1AAs+SR87XgYJERaGCytU4WL7ZykxzN3wDszm4WRiYAZ5k4GB4dU7SPoojBZhiPESYLh+/ydDVtszvJYTdIB/4UMUX7lZ8DA4pt1jUJJmA8evgwkPw/ef/8CBcPj8VwZjTU6G7HBhhscvfjPEVD9m+PD5L2UOwAXuPf3FUDX5Bdi3zMwMDC1zXjHcfPCToSNPAhw9oIQLyoYgsGDTe4bm2a9wmsWI3CaEVZe0ro4HVYOEadQBDKMOGGDAgk2QXv0DEBjwEGAc7ZwyDDAAANkDnSRKIl65AAAAAElFTkSuQmCC";
 
 function payTo(env) {
   const a = (env && env.PAY_TO) || "";
@@ -1345,6 +1348,16 @@ export default {
     if (path === "/health" && req.method === "GET") {
       return json({ ok: true, pay_to_configured: Boolean(payTo(env)) });
     }
+    if ((path === "/favicon.ico" || path === "/favicon.png") && req.method === "GET") {
+      const bytes = Uint8Array.from(atob(FAVICON_ICO_B64), (c) => c.charCodeAt(0));
+      return new Response(bytes, {
+        headers: {
+          "content-type": path.endsWith(".png") ? "image/png" : "image/x-icon",
+          "cache-control": "public, max-age=86400",
+          "access-control-allow-origin": "*",
+        },
+      });
+    }
     if ((path === "/openapi.json" || path === "/.well-known/openapi.json") && req.method === "GET") {
       const base = origin(req);
       const paths = {};
@@ -1354,6 +1367,10 @@ export default {
             summary: r.description,
             operationId: p.replace("/v1/", "").replace(/-/g, "_"),
             "x-x402": { amount: "0.01", asset: "USDC", network: "eip155:8453" },
+            "x-payment-info": {
+              price: { mode: "fixed", currency: "USD", amount: "0.01" },
+              protocols: ["x402"],
+            },
             requestBody: { content: { "application/json": { schema: { type: "object" } } } },
             responses: { 200: { description: "Paid result" }, 402: { description: "Payment required" } },
           },
@@ -1361,7 +1378,14 @@ export default {
       }
       return json({
         openapi: "3.1.0",
-        info: { title: SERVICE, version: "1.2.0", description: wellKnownX402(req, env).description },
+        info: {
+          title: SERVICE,
+          version: "1.3.0",
+          description: wellKnownX402(req, env).description,
+          "x-guidance":
+            "Paid French legal helpers for agents. POST JSON to /v1/* ($0.01 USDC on Base, HTTP 402). Start with /v1/einvoice-who, /v1/late-penalties, /v1/check-siret, /v1/due-date. MCP: POST /mcp (tools/list free, tools/call paid). No INSEE, no scrape.",
+          contact: { name: "Yanis Monnet", email: "orthies@proton.me" },
+        },
         servers: [{ url: base }],
         paths,
       });
