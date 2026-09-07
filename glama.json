@@ -1,0 +1,9 @@
+{
+  "name": "fr-legal-kit",
+  "description": "French legal helpers for AI agents: e-invoice calendar, L441-10, holidays, TVA, SIRET/IBAN. HTTP x402 + MCP POST /mcp. $0.01 USDC on Base.",
+  "category": "developer-tools",
+  "remote": {
+    "url": "https://fr-legal-kit.monnet-yanis1.workers.dev/mcp",
+    "transport": "http"
+  }
+}

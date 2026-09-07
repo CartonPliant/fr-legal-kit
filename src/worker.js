@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -239,6 +239,18 @@ const ROUTES = {
     },
     fn: holidays,
   },
+  "/v1/payment-term-max": {
+    description:
+      "Statutory ceiling on agreed FR B2B payment terms: 60 days after invoice issue, or 45 days end-of-month if stipulated (L441-10 I). Not a recommended term.",
+    tags: ["france", "invoice", "L441-10", "payment-terms"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { invoice_date: "2026-09-07" } },
+        output: { type: "json", example: { ok: true, max_days_after_invoice_issue: 60 } },
+      },
+    },
+    fn: paymentTermMax,
+  },
 };
 
 function llmsTxt(base) {
@@ -414,6 +426,16 @@ export default {
     }
     if (path === "/.well-known/agent-card.json" && req.method === "GET") {
       return json(agentCard(req));
+    }
+    if ((path === "/.well-known/mcp.json" || path === "/.well-known/mcp") && req.method === "GET") {
+      const base = origin(req);
+      return json({
+        name: SERVICE,
+        description: "French legal helpers for agents. tools/list free; tools/call x402 $0.01 USDC Base.",
+        transport: { type: "streamable-http", url: `${base}/mcp` },
+        endpoint: `${base}/mcp`,
+        tools: Object.keys(ROUTES).map((p) => p.replace("/v1/", "")),
+      });
     }
     if (path === "/a2a" && req.method === "GET") {
       return json(agentCard(req));

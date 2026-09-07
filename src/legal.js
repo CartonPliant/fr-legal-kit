@@ -332,6 +332,24 @@ const TVA = {
   exempt: { rate_pct: 0, cgi: "exempt / hors champ — not a rate", examples: ["some education, insurance, 293 B franchise is not a VAT rate"] },
 };
 
+/** Statutory ceiling on agreed B2B payment terms (L441-10 I). */
+export function paymentTermMax(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const invoiceDate = String(i.invoice_date || "").trim();
+  return {
+    ok: true,
+    max_days_after_invoice_issue: 60,
+    alt_45_end_of_month: {
+      allowed: true,
+      condition:
+        "Expressly stipulated in the contract and not a manifest abuse vis-à-vis the creditor.",
+    },
+    invoice_date: invoiceDate || null,
+    source: "C. com. L441-10 I (délai convenu ≤ 60 jours après émission ; dérogation 45 jours fin de mois).",
+    note: "Ceiling, not a recommended term. Shorter delays are valid. Not legal advice.",
+  };
+}
+
 export function holidays(input) {
   const i = input && typeof input === "object" ? input : {};
   const year = String(i.year || "2026");

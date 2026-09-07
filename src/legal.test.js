@@ -9,6 +9,7 @@ import {
   dueDate,
   tvaRate,
   holidays,
+  paymentTermMax,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -104,5 +105,14 @@ describe("holidays", () => {
     assert.equal(r.ok, true);
     assert.equal(r.count, 11);
     assert.ok(r.holidays.some((h) => h.date === "2026-04-06"));
+  });
+});
+
+describe("paymentTermMax", () => {
+  it("returns 60 days and 45 EOM derogation", () => {
+    const r = paymentTermMax({});
+    assert.equal(r.ok, true);
+    assert.equal(r.max_days_after_invoice_issue, 60);
+    assert.equal(r.alt_45_end_of_month.allowed, true);
   });
 });
