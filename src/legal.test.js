@@ -58,6 +58,8 @@ import {
   conservation,
   prescription,
   garantieCommerciale,
+  exportVat,
+  proforma,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -952,5 +954,36 @@ describe("garantieCommerciale", () => {
     const r = garantieCommerciale({});
     assert.equal(r.months, null);
     assert.match(r.mention, /distincte/);
+  });
+});
+
+describe("exportVat", () => {
+  it("uses CGI 262 for extra-EU export", () => {
+    const r = exportVat({ kind: "extra_eu" });
+    assert.equal(r.ok, true);
+    assert.equal(r.kind, "extra_eu");
+    assert.match(r.mention, /262 du CGI/);
+  });
+  it("uses 262 ter I for intra-EU supply", () => {
+    const r = exportVat({ kind: "intracom" });
+    assert.equal(r.kind, "intracom");
+    assert.match(r.mention, /262 ter I/);
+  });
+  it("rejects an unknown kind", () => {
+    const r = exportVat({ kind: "franchise" });
+    assert.equal(r.ok, false);
+  });
+});
+
+describe("proforma", () => {
+  it("says it is not an invoice", () => {
+    const r = proforma({ number: "PF-2026-001" });
+    assert.equal(r.is_invoice, false);
+    assert.match(r.mention, /PF-2026-001/);
+    assert.match(r.mention, /CGI 289/);
+  });
+  it("works without a number", () => {
+    const r = proforma({});
+    assert.match(r.mention, /pro forma/);
   });
 });

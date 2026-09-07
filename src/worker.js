@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -852,6 +852,30 @@ const ROUTES = {
     },
     fn: garantieCommerciale,
   },
+  "/v1/export": {
+    description:
+      "French VAT exemption mention: extra-EU export CGI 262 I, or intra-EU supply CGI 262 ter I. Distinct from reverse-charge /v1/autoliquidation.",
+    tags: ["france", "tva", "export", "CGI262", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { kind: "extra_eu" } },
+        output: { type: "json", example: { ok: true, cgi: "CGI 262 I" } },
+      },
+    },
+    fn: exportVat,
+  },
+  "/v1/proforma": {
+    description:
+      "French pro forma header: this document is not an invoice (CGI 289). Optional number.",
+    tags: ["france", "invoice", "proforma", "CGI289"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { number: "PF-2026-001" } },
+        output: { type: "json", example: { ok: true, is_invoice: false } },
+      },
+    },
+    fn: proforma,
+  },
 };
 
 function llmsTxt(base) {
@@ -1030,6 +1054,12 @@ JSON: { "due_date": "2026-09-07", "buyer": "b2b" }
 
 POST ${base}/v1/garantie-commerciale
 JSON: { "months": 12, "delivery_date": "2026-09-07" }
+
+POST ${base}/v1/export
+JSON: { "kind": "extra_eu" }
+
+POST ${base}/v1/proforma
+JSON: { "number": "PF-2026-001" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

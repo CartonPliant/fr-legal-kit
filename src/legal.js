@@ -2426,3 +2426,53 @@ export function garantieCommerciale(input) {
     note: "Contractual extra. Does not replace the legal warranty. Not legal advice.",
   };
 }
+
+/** VAT exemption mention for extra-EU export (CGI 262) or intra-EU supply (CGI 262 ter I). */
+export function exportVat(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.kind || i.case || i.mode || "extra_eu")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  if (raw === "intracom" || raw === "intraeu" || raw === "ue" || raw === "eu") {
+    return {
+      ok: true,
+      kind: "intracom",
+      cgi: "CGI 262 ter I",
+      vat_on_invoice: false,
+      mention: "Exonération de TVA, article 262 ter I du CGI.",
+      source: "CGI 262 ter I (livraison intracommunautaire de biens). Distinct from reverse-charge autoliquidation.",
+      note: "Buyer must be VAT-identified in another Member State. Not a tax ruling.",
+    };
+  }
+  if (raw === "extraeu" || raw === "export" || raw === "exportation" || raw === "horsue" || raw === "") {
+    return {
+      ok: true,
+      kind: "extra_eu",
+      cgi: "CGI 262 I",
+      vat_on_invoice: false,
+      mention: "Exonération de TVA, article 262 du CGI (exportation).",
+      source: "CGI 262 I (exportation de biens hors UE).",
+      note: "Proof of exit from the EU is the exporter's problem. Not a customs filing. Not a tax ruling.",
+    };
+  }
+  return { ok: false, missing: ["kind"], error: "kind: extra_eu|intracom" };
+}
+
+/** Pro forma: not an invoice (CGI 289). Collable header. */
+export function proforma(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const number = String(i.number || i.no || i.ref || "").trim();
+  const mention = number
+    ? `Pro forma n° ${number} — ce document ne constitue pas une facture (CGI 289).`
+    : "Ce document est un pro forma et ne constitue pas une facture (CGI 289).";
+  return {
+    ok: true,
+    is_invoice: false,
+    number: number || null,
+    mention,
+    source: "CGI 289 (mentions et original de facture). A pro forma is not an invoice.",
+    note: "Does not create VAT. Use /v1/doc-title for Facture/Devis. Not legal advice.",
+  };
+}
