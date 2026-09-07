@@ -2182,3 +2182,37 @@ export function mediateur(input) {
     note: "The professional must actually designate a mediator. This is a collable mention, not a registration. Not legal advice.",
   };
 }
+
+/** Date of supply vs invoice date (CGI 289 / 242 nonies A). Mention when delivery differs. */
+export function delivery(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const invoice = parseISODate(i.invoice_date || i.issued_on || i.facture);
+  const supplied = parseISODate(i.delivery_date || i.supplied_on || i.date || i.prestation);
+  if (!supplied && !invoice) {
+    return { ok: false, missing: ["delivery_date"], error: "delivery_date YYYY-MM-DD (optional invoice_date)." };
+  }
+  const raw = String(i.kind || i.subject || "goods")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const services = raw === "services" || raw === "prestation" || raw === "prestations";
+  const label = services ? "Date d'exécution de la prestation" : "Date de livraison";
+  const supplyIso = supplied ? ymd(supplied) : ymd(invoice);
+  const formatted = dateFr({ date: supplyIso }).formatted;
+  const invoiceIso = invoice ? ymd(invoice) : null;
+  const same = !invoiceIso || invoiceIso === supplyIso;
+  const mention = same
+    ? `${label} : ${formatted} (identique à la date de facture).`
+    : `${label} : ${formatted} (distincte de la date de facture ${dateFr({ date: invoiceIso }).formatted}).`;
+  return {
+    ok: true,
+    kind: services ? "services" : "goods",
+    delivery_date: supplyIso,
+    invoice_date: invoiceIso,
+    same_as_invoice: same,
+    mention,
+    source: "CGI 289 / 242 nonies A (date de la livraison ou de la prestation si distincte de l'émission).",
+    note: "Collable mention. Does not prove the goods moved that day. Not legal advice.",
+  };
+}

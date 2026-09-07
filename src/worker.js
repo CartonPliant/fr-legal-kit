@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -768,6 +768,18 @@ const ROUTES = {
     },
     fn: mediateur,
   },
+  "/v1/delivery": {
+    description:
+      "French invoice date of supply (CGI 289 / 242 nonies A): delivery or service execution vs invoice date. Distinct dates get an explicit mention.",
+    tags: ["france", "invoice", "livraison", "CGI289", "242-nonies-A"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { invoice_date: "2026-09-07", delivery_date: "2026-09-10" } },
+        output: { type: "json", example: { ok: true, same_as_invoice: false } },
+      },
+    },
+    fn: delivery,
+  },
 };
 
 function llmsTxt(base) {
@@ -925,6 +937,9 @@ JSON: { "delivery_date": "2026-09-07" }
 
 POST ${base}/v1/mediateur
 JSON: { "name": "CNPM", "url": "https://www.cnpm-mediation-consommation.eu" }
+
+POST ${base}/v1/delivery
+JSON: { "invoice_date": "2026-09-07", "delivery_date": "2026-09-10" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

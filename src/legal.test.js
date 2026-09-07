@@ -51,6 +51,7 @@ import {
   reservePropriete,
   garantieLegale,
   mediateur,
+  delivery,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -825,5 +826,24 @@ describe("mediateur", () => {
   it("returns a generic reminder without coordinates", () => {
     const r = mediateur({});
     assert.match(r.mention, /médiateur/);
+  });
+});
+
+describe("delivery", () => {
+  it("flags a delivery date distinct from the invoice date", () => {
+    const r = delivery({ invoice_date: "2026-09-07", delivery_date: "2026-09-10" });
+    assert.equal(r.ok, true);
+    assert.equal(r.same_as_invoice, false);
+    assert.match(r.mention, /10\/09\/2026/);
+    assert.match(r.mention, /07\/09\/2026/);
+  });
+  it("treats matching dates as identical", () => {
+    const r = delivery({ invoice_date: "2026-09-07", delivery_date: "2026-09-07" });
+    assert.equal(r.same_as_invoice, true);
+    assert.match(r.mention, /identique/);
+  });
+  it("labels a service as date d'exécution", () => {
+    const r = delivery({ delivery_date: "2026-09-07", kind: "services" });
+    assert.match(r.mention, /exécution/);
   });
 });

@@ -55,6 +55,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/reserve-propriete` | Retention-of-title clause (L.624-16) until full payment. Goods only |
 | `/v1/garantie-legale` | Consumer legal warranty 2 years from delivery (C. conso L.217-3) |
 | `/v1/mediateur` | Consumer mediator mention (C. conso L.612-1). B2C only |
+| `/v1/delivery` | Date of supply vs invoice date (CGI 289 / 242 nonies A) |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |
