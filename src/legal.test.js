@@ -41,6 +41,7 @@ import {
   siegeSocial,
   netAPayer,
   docTitle,
+  autoliquidation,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -639,5 +640,23 @@ describe("docTitle", () => {
     const r = docTitle({ kind: "devis" });
     assert.equal(r.is_invoice, false);
     assert.equal(r.title, "Devis");
+  });
+});
+
+describe("autoliquidation", () => {
+  it("defaults to intra-EU CGI 283", () => {
+    const r = autoliquidation({});
+    assert.equal(r.ok, true);
+    assert.equal(r.kind, "intra_eu");
+    assert.equal(r.vat_on_invoice, false);
+    assert.match(r.mention, /283/);
+  });
+  it("uses 283-2 nonies for BTP", () => {
+    const r = autoliquidation({ kind: "btp" });
+    assert.equal(r.kind, "construction");
+    assert.match(r.cgi, /283-2 nonies/);
+  });
+  it("rejects an unknown case", () => {
+    assert.equal(autoliquidation({ kind: "retail" }).ok, false);
   });
 });

@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -645,6 +645,18 @@ const ROUTES = {
     },
     fn: docTitle,
   },
+  "/v1/autoliquidation": {
+    description:
+      "French reverse-charge VAT mention (autoliquidation): intra-EU CGI 283, construction 283-2 nonies, or import. Invoice shows HT; VAT due by the customer.",
+    tags: ["france", "tva", "autoliquidation", "cgi-283", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { kind: "intra_eu" } },
+        output: { type: "json", example: { ok: true, mention: "Autoliquidation — TVA due par le preneur (CGI art. 283)." } },
+      },
+    },
+    fn: autoliquidation,
+  },
 };
 
 function llmsTxt(base) {
@@ -772,6 +784,9 @@ JSON: { "amount_ht": 1000, "rate": "standard" }
 
 POST ${base}/v1/doc-title
 JSON: { "kind": "facture", "number": "F-2026-0042" }
+
+POST ${base}/v1/autoliquidation
+JSON: { "kind": "intra_eu" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

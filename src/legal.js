@@ -1806,3 +1806,59 @@ export function docTitle(input) {
     note: "Document title helper. A devis is not an invoice. Not a legal opinion.",
   };
 }
+
+const AUTOLIQUIDATION = {
+  intra_eu: {
+    mention: "Autoliquidation — TVA due par le preneur (CGI art. 283).",
+    cgi: "CGI art. 283",
+  },
+  construction: {
+    mention: "Autoliquidation — TVA due par le preneur (CGI art. 283-2 nonies).",
+    cgi: "CGI art. 283-2 nonies",
+  },
+  import: {
+    mention: "Autoliquidation à l'importation — TVA due par le destinataire.",
+    cgi: "CGI art. 1695 / 277 A",
+  },
+};
+
+const AUTOLIQUIDATION_ALIAS = {
+  intraeu: "intra_eu",
+  b2b: "intra_eu",
+  ue: "intra_eu",
+  eu: "intra_eu",
+  construction: "construction",
+  btp: "construction",
+  sousTraitance: "construction",
+  soustraitance: "construction",
+  import: "import",
+  importation: "import",
+};
+
+/** Reverse-charge VAT invoice mention (autoliquidation). */
+export function autoliquidation(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.kind || i.case || i.mode || "intra_eu")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const key = AUTOLIQUIDATION_ALIAS[raw] || (AUTOLIQUIDATION[raw] ? raw : null);
+  if (!key) {
+    return {
+      ok: false,
+      missing: ["kind"],
+      error: "kind: intra_eu|construction|import",
+    };
+  }
+  const a = AUTOLIQUIDATION[key];
+  return {
+    ok: true,
+    kind: key,
+    cgi: a.cgi,
+    vat_on_invoice: false,
+    mention: a.mention,
+    source: a.cgi + " (autoliquidation / reverse charge). Invoice shows HT; VAT is due by the customer.",
+    note: "Collable mention. Does not decide whether reverse charge applies to the deal. Not a tax ruling.",
+  };
+}
