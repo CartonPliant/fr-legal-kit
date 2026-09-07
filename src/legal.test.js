@@ -38,6 +38,7 @@ import {
   dateFr,
   paymentMeans,
   interestStart,
+  siegeSocial,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -582,5 +583,21 @@ describe("interestStart", () => {
   });
   it("requires a due date", () => {
     assert.equal(interestStart({}).ok, false);
+  });
+});
+
+describe("siegeSocial", () => {
+  it("formats a Pau address", () => {
+    const r = siegeSocial({ street: "12 rue des Pyrénées", postcode: "64000", city: "Pau" });
+    assert.equal(r.ok, true);
+    assert.equal(r.department, "64");
+    assert.equal(r.mention, "Siège social : 12 rue des Pyrénées, 64000 Pau");
+  });
+  it("flags Alsace-Moselle from the postcode", () => {
+    const r = siegeSocial({ street: "1 place Broglie", cp: "67000", ville: "Strasbourg" });
+    assert.equal(r.alsace_moselle, true);
+  });
+  it("requires street and city", () => {
+    assert.equal(siegeSocial({ postcode: "64000", city: "Pau" }).ok, false);
   });
 });

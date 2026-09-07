@@ -1705,3 +1705,30 @@ export function interestStart(input) {
     note: "Calendar day after the due date. Periods are calendar unless the contract says otherwise. Not legal advice.",
   };
 }
+
+/** Siège social invoice mention (L441-9 identification of sociétés). Format only, not a Kbis. */
+export function siegeSocial(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const street = String(i.street || i.adresse || i.line1 || i.voie || "").trim();
+  const city = String(i.city || i.ville || "").trim();
+  if (!street) return { ok: false, missing: ["street"], error: "street of the siège social." };
+  if (!city) return { ok: false, missing: ["city"], error: "city of the siège social." };
+  const pc = postcodeFr({ postcode: i.postcode || i.cp || i.code_postal });
+  if (!pc.ok) return pc;
+  const complement = String(i.complement || i.line2 || "").trim();
+  const line = complement
+    ? `${street}, ${complement}, ${pc.postcode} ${city}`
+    : `${street}, ${pc.postcode} ${city}`;
+  return {
+    ok: true,
+    street,
+    complement: complement || null,
+    postcode: pc.postcode,
+    city,
+    department: pc.department,
+    alsace_moselle: pc.alsace_moselle,
+    mention: `Siège social : ${line}`,
+    source: "C. com. L441-9 (siège social des sociétés). Format only.",
+    note: "Does not prove the address on the Kbis. EI may use the professional address instead. Not legal advice.",
+  };
+}

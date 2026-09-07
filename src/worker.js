@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -609,6 +609,18 @@ const ROUTES = {
     },
     fn: interestStart,
   },
+  "/v1/siege-social": {
+    description:
+      "French siège social invoice mention (L441-9): street + postcode + city, department prefix, Alsace-Moselle flag. Format only, not a Kbis.",
+    tags: ["france", "invoice", "adresse", "siege", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { street: "12 rue des Pyrénées", postcode: "64000", city: "Pau" } },
+        output: { type: "json", example: { ok: true, mention: "Siège social : 12 rue des Pyrénées, 64000 Pau" } },
+      },
+    },
+    fn: siegeSocial,
+  },
 };
 
 function llmsTxt(base) {
@@ -727,6 +739,9 @@ JSON: { "kind": "virement" }
 
 POST ${base}/v1/interest-start
 JSON: { "due_date": "2026-09-07" }
+
+POST ${base}/v1/siege-social
+JSON: { "street": "12 rue des Pyrénées", "postcode": "64000", "city": "Pau" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
