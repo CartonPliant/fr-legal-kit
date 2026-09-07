@@ -5,7 +5,7 @@
   "type": "module",
   "description": "x402 French legal kit for AI agents: e-invoice calendar, L441-10 penalties, SIRET/IBAN checksums. Offline, no scrape.",
   "scripts": {
-    "test": "node --test src/legal.test.js",
+    "test": "node --test src/legal.test.js src/favicon.test.js",
     "deploy": "npx wrangler@4 deploy"
   }
 }
