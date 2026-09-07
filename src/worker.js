@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -455,6 +455,18 @@ const ROUTES = {
     },
     fn: postcodeFr,
   },
+  "/v1/legal-form": {
+    description:
+      "Extra French invoice mentions by legal form (EI/micro vs SARL/SAS/SA/SCI): EI quality, 293 B, capital, RCS. On top of /v1/mention-fields.",
+    tags: ["france", "invoice", "mentions", "ei", "sas", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { form: "sas" } },
+        output: { type: "json", example: { ok: true, is_societe: true, extra: [{ id: "capital" }] } },
+      },
+    },
+    fn: legalForm,
+  },
 };
 
 function llmsTxt(base) {
@@ -537,6 +549,9 @@ JSON: { "code": "62.01Z" }
 
 POST ${base}/v1/postcode-fr
 JSON: { "postcode": "67000" }
+
+POST ${base}/v1/legal-form
+JSON: { "form": "sas" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

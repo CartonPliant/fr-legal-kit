@@ -1111,3 +1111,58 @@ export function postcodeFr(input) {
     note: "Format and department prefix only. Does not prove the address exists. Not legal advice.",
   };
 }
+
+const LEGAL_FORM_ALIAS = {
+  ei: "ei",
+  entrepreneurindividuel: "ei",
+  micro: "micro",
+  autoentrepreneur: "micro",
+  microentrepreneur: "micro",
+  eurl: "eurl",
+  sarl: "sarl",
+  sas: "sas",
+  sasu: "sasu",
+  sa: "sa",
+  sci: "sci",
+};
+
+/** Extra invoice mentions that depend on legal form (on top of L441-9 core). */
+export function legalForm(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.form || i.legal_form || i.kind || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s_-]+/g, "");
+  const key = LEGAL_FORM_ALIAS[raw];
+  if (!key) {
+    return {
+      ok: false,
+      missing: ["form"],
+      error: "form: ei|micro|eurl|sarl|sas|sasu|sa|sci",
+    };
+  }
+  const extra = [];
+  const societe = ["eurl", "sarl", "sas", "sasu", "sa", "sci"].includes(key);
+  if (key === "ei" || key === "micro") {
+    extra.push({ id: "ei_quality", label: "Qualité d'entrepreneur individuel" });
+  }
+  if (key === "micro" || key === "ei") {
+    extra.push({ id: "293b_if_franchise", label: "TVA non applicable, art. 293 B du CGI (si franchise)" });
+  }
+  if (societe) {
+    extra.push({ id: "forme", label: "Forme juridique" });
+    extra.push({ id: "capital", label: "Montant du capital social" });
+    extra.push({ id: "rcs", label: "RCS + ville du greffe" });
+    extra.push({ id: "siege", label: "Siège social" });
+  }
+  if (key === "sci") extra.push({ id: "objet", label: "Objet social (usage pour SCI)" });
+  return {
+    ok: true,
+    form: key,
+    is_societe: societe,
+    extra,
+    source: "C. com. L441-9 + mentions d'identification selon la forme (RCS/capital pour sociétés ; qualité EI pour l'EI).",
+    note: "Extra fields on top of the core L441-9 checklist (/v1/mention-fields). Not a legal opinion.",
+  };
+}

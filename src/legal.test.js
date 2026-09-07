@@ -26,6 +26,7 @@ import {
   quoteValidity,
   apeNaf,
   postcodeFr,
+  legalForm,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -357,5 +358,17 @@ describe("postcodeFr", () => {
     assert.equal(postcodeFr({ cp: "20200" }).department, "2B");
     assert.equal(postcodeFr({ postcode: "97100" }).department, "971");
     assert.equal(postcodeFr({ postcode: "67000" }).alsace_moselle, true);
+  });
+});
+
+describe("legalForm", () => {
+  it("asks EI quality for micro and capital/RCS for SAS", () => {
+    const ei = legalForm({ form: "micro" });
+    assert.equal(ei.ok, true);
+    assert.ok(ei.extra.some((x) => x.id === "ei_quality"));
+    const sas = legalForm({ form: "SAS" });
+    assert.equal(sas.is_societe, true);
+    assert.ok(sas.extra.some((x) => x.id === "capital"));
+    assert.ok(sas.extra.some((x) => x.id === "rcs"));
   });
 });
