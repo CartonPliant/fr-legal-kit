@@ -34,6 +34,7 @@ import {
   rcsMention,
   invoiceCurrency,
   escompte,
+  acompte,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -507,5 +508,24 @@ describe("escompte", () => {
   });
   it("treats rate 0 as no discount", () => {
     assert.equal(escompte({ rate_pct: 0 }).has_discount, false);
+  });
+});
+
+describe("acompte", () => {
+  it("defaults to 30% and increments AC-2026-0003", () => {
+    const r = acompte({ amount_ttc: 1200, last_number: "AC-2026-0003" });
+    assert.equal(r.ok, true);
+    assert.equal(r.next_number, "AC-2026-0004");
+    assert.equal(r.acompte_ttc, 360);
+    assert.equal(r.remaining_ttc, 840);
+    assert.match(r.mention, /AC-2026-0004/);
+  });
+  it("uses an explicit percentage", () => {
+    const r = acompte({ amount_ttc: 1000, acompte_pct: 40 });
+    assert.equal(r.acompte_ttc, 400);
+    assert.equal(r.remaining_ttc, 600);
+  });
+  it("requires amount_ttc", () => {
+    assert.equal(acompte({}).ok, false);
   });
 });

@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -561,6 +561,18 @@ const ROUTES = {
     },
     fn: escompte,
   },
+  "/v1/acompte": {
+    description:
+      "French down-payment (acompte) invoice: next AC- number, 30% default or explicit %, remaining TTC, collable CGI 289 mention. Own L441-9 sequence.",
+    tags: ["france", "invoice", "acompte", "L441-9", "CGI-289"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { amount_ttc: 1200, last_number: "AC-2026-0003" } },
+        output: { type: "json", example: { ok: true, next_number: "AC-2026-0004", acompte_ttc: 360 } },
+      },
+    },
+    fn: acompte,
+  },
 };
 
 function llmsTxt(base) {
@@ -667,6 +679,9 @@ JSON: { "currency": "EUR" }
 
 POST ${base}/v1/escompte
 JSON: { "rate_pct": 2, "days": 10 }
+
+POST ${base}/v1/acompte
+JSON: { "amount_ttc": 1200, "last_number": "AC-2026-0003" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

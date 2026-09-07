@@ -1521,3 +1521,64 @@ export function escompte(input) {
     note: "Collable mention. Does not compute the discounted amount. Not legal advice.",
   };
 }
+
+/** Down-payment (acompte) invoice: own L441-9 number + remaining balance (CGI 289). Default 30% usage. */
+export function acompte(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const totalRaw = i.amount_ttc ?? i.total_ttc ?? i.total;
+  if (totalRaw === undefined || totalRaw === null || totalRaw === "") {
+    return { ok: false, missing: ["amount_ttc"], error: "amount_ttc of the full job." };
+  }
+  const total = Number(totalRaw);
+  if (!Number.isFinite(total) || total <= 0) return { ok: false, error: "amount_ttc > 0." };
+  const pctRaw = i.acompte_pct ?? i.percent ?? i.pct;
+  const accRaw = i.acompte_ttc ?? i.deposit_ttc ?? i.acompte;
+  const hasPct = pctRaw !== undefined && pctRaw !== null && pctRaw !== "";
+  const hasAcc = accRaw !== undefined && accRaw !== null && accRaw !== "";
+  if (hasPct && hasAcc) {
+    return { ok: false, error: "Pass exactly one of acompte_pct or acompte_ttc." };
+  }
+  let acompteTtc;
+  let pct;
+  if (hasPct) {
+    pct = Number(pctRaw);
+    if (!Number.isFinite(pct) || pct <= 0 || pct >= 100) return { ok: false, error: "acompte_pct in (0, 100)." };
+    acompteTtc = round2(total * (pct / 100));
+  } else if (hasAcc) {
+    acompteTtc = Number(accRaw);
+    if (!Number.isFinite(acompteTtc) || acompteTtc <= 0 || acompteTtc >= total) {
+      return { ok: false, error: "acompte_ttc must be > 0 and < amount_ttc." };
+    }
+    pct = round2((acompteTtc / total) * 100);
+  } else {
+    pct = 30;
+    acompteTtc = round2(total * 0.3);
+  }
+  const remaining = round2(total - acompteTtc);
+  const last = String(i.last_number || i.last_acompte || i.last || "").trim();
+  let prefix = "AC-2026-";
+  let seq = 0;
+  let width = 4;
+  if (last) {
+    const m = /^(.*?)(\d+)$/.exec(last);
+    if (!m) return { ok: false, error: "last_number must end with digits (e.g. AC-2026-0003)." };
+    prefix = m[1];
+    seq = Number(m[2]);
+    width = m[2].length;
+  } else {
+    const year = i.year != null ? String(i.year) : "2026";
+    prefix = i.prefix != null ? String(i.prefix) : `AC-${year}-`;
+  }
+  const next = `${prefix}${String(seq + 1).padStart(width, "0")}`;
+  return {
+    ok: true,
+    next_number: next,
+    amount_ttc: round2(total),
+    acompte_ttc: acompteTtc,
+    remaining_ttc: remaining,
+    acompte_pct: pct,
+    mention: `Facture d'acompte n° ${next} de ${formatEurFr(acompteTtc)} TTC. Reste dû : ${formatEurFr(remaining)} TTC.`,
+    source: "C. com. L441-9 (numéro propre) + CGI art. 289 (facture d'acompte). 30% default is usage, not a statutory rate.",
+    note: "Down-payment invoice helper. Final invoice must deduct the acompte. Not a legal opinion.",
+  };
+}
