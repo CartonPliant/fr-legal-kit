@@ -575,6 +575,46 @@ export function dunningSteps(input) {
   };
 }
 
+/** Inclusive count of metropolitan open days between two dates (skip Sat/Sun + L.3133-1). */
+export function openDays(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const from = parseISODate(i.from || i.start || i.start_date);
+  const to = parseISODate(i.to || i.end || i.end_date);
+  const alsace = Boolean(i.alsace_moselle);
+  if (!from) return { ok: false, missing: ["from"], error: "from YYYY-MM-DD." };
+  if (!to) return { ok: false, missing: ["to"], error: "to YYYY-MM-DD." };
+  if (to < from) return { ok: false, error: "to must be on or after from." };
+  const span = Math.round((to - from) / 86400000);
+  if (span > 400) return { ok: false, error: "window max 400 calendar days." };
+  let open = 0;
+  let weekend = 0;
+  let holiday = 0;
+  const holidaysHit = [];
+  for (let n = 0; n <= span; n++) {
+    const d = addDays(from, n);
+    const iso = ymd(d);
+    const h = holidayName(iso, alsace);
+    if (isWeekend(d)) weekend += 1;
+    else if (h) {
+      holiday += 1;
+      holidaysHit.push({ date: iso, name: h });
+    } else open += 1;
+  }
+  return {
+    ok: true,
+    from: ymd(from),
+    to: ymd(to),
+    calendar_days_inclusive: span + 1,
+    open_days_inclusive: open,
+    weekend_days: weekend,
+    holiday_days: holiday,
+    holidays: holidaysHit,
+    alsace_moselle: alsace,
+    source: "C. trav. L.3133-1 metropolitan holidays 2026–2027. Inclusive count.",
+    note: "Open = not Saturday/Sunday and not a listed holiday. L441-10 delays are calendar unless the contract says otherwise. Not legal advice.",
+  };
+}
+
 /** Statutory ceiling on agreed B2B payment terms (L441-10 I). */
 export function paymentTermMax(input) {
   const i = input && typeof input === "object" ? input : {};

@@ -19,6 +19,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/penalty-text` | Collable L441-10 + D.441-5 mention strings (12,40 % + 40 €) |
 | `/v1/franchise-293b` | 2026 293 B thresholds (37 500 / 85 000 €) + statutory mention |
 | `/v1/dunning-steps` | Relance calendar J+1 / J+8 / J+15 after due date (usage; L441-10 sans rappel) |
+| `/v1/open-days` | Inclusive open-day count between two dates (skip weekend + L.3133-1) |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

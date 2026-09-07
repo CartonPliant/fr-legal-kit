@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -320,6 +320,18 @@ const ROUTES = {
     },
     fn: dunningSteps,
   },
+  "/v1/open-days": {
+    description:
+      "Inclusive count of French metropolitan open days between two dates (skip Sat/Sun + L.3133-1 holidays 2026–2027). Optional Alsace-Moselle extras.",
+    tags: ["france", "calendar", "jours-ouvres", "jours-feries"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { from: "2026-04-03", to: "2026-04-07" } },
+        output: { type: "json", example: { ok: true, open_days_inclusive: 2, holiday_days: 1 } },
+      },
+    },
+    fn: openDays,
+  },
 };
 
 function llmsTxt(base) {
@@ -369,6 +381,9 @@ JSON: { "activity": "services"|"goods"|"lawyers"|"authors", "ca_n1_eur": 20000, 
 POST ${base}/v1/dunning-steps
 JSON: { "due_date": "2026-09-07" }
 or { "invoice_date": "2026-09-01", "net_days": 30 }
+
+POST ${base}/v1/open-days
+JSON: { "from": "2026-04-03", "to": "2026-04-07", "alsace_moselle": false }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

@@ -15,6 +15,7 @@ import {
   penaltyText,
   franchise293b,
   dunningSteps,
+  openDays,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -198,5 +199,22 @@ describe("dunningSteps", () => {
     const r = dunningSteps({ invoice_date: "2026-09-01", net_days: 0 });
     assert.equal(r.ok, true);
     assert.equal(r.due_date, "2026-09-01");
+  });
+});
+
+describe("openDays", () => {
+  it("counts Easter week 2026 métropole (Fri 3 Apr–Tue 7 Apr)", () => {
+    const r = openDays({ from: "2026-04-03", to: "2026-04-07" });
+    assert.equal(r.ok, true);
+    assert.equal(r.calendar_days_inclusive, 5);
+    assert.equal(r.weekend_days, 2);
+    assert.equal(r.holiday_days, 1);
+    assert.equal(r.open_days_inclusive, 2);
+    assert.equal(r.holidays[0].date, "2026-04-06");
+  });
+  it("treats Good Friday as a holiday in Alsace-Moselle", () => {
+    const r = openDays({ from: "2026-04-03", to: "2026-04-07", alsace_moselle: true });
+    assert.equal(r.holiday_days, 2);
+    assert.equal(r.open_days_inclusive, 1);
   });
 });
