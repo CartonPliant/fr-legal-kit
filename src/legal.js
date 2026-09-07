@@ -2561,3 +2561,54 @@ export function autofacturation(input) {
     note: "The seller remains liable for VAT. This is a collable stamp, not the agreement. Not a tax ruling.",
   };
 }
+
+/** Billing personal-data mention (RGPD art. 6.1.b/c + 10-year keep L123-22). */
+export function rgpd(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const controller = String(i.controller || i.responsable || i.name || "").trim();
+  const keep = "10 ans";
+  const base =
+    "Les données de facturation sont traitées pour l'exécution du contrat et les obligations légales (RGPD art. 6.1.b et 6.1.c) et conservées 10 ans (C. com. L123-22).";
+  const mention = controller ? `${base} Responsable de traitement : ${controller}.` : base;
+  return {
+    ok: true,
+    controller: controller || null,
+    keep,
+    mention,
+    source: "RGPD art. 6.1.b/c ; C. com. L123-22 (conservation 10 ans). Not a full privacy notice.",
+    note: "Collable footer. Does not replace a privacy policy. Not legal advice.",
+  };
+}
+
+/** Invoice language: Toubon 94-665 for consumer-facing FR; B2B default French for tax control. */
+export function langue(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.buyer || i.audience || i.kind || "b2b")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const b2c = raw === "b2c" || raw === "consommateur" || raw === "conso";
+  const lang = String(i.lang || i.language || "fr").toLowerCase().slice(0, 2);
+  if (b2c) {
+    return {
+      ok: true,
+      buyer: "b2c",
+      lang,
+      mention:
+        lang === "fr"
+          ? "Facture établie en français (loi n° 94-665 du 4 août 1994)."
+          : "Document destiné au consommateur en France : une version française est requise (loi n° 94-665 du 4 août 1994).",
+      source: "Loi n° 94-665 du 4 août 1994 (Toubon) pour l'offre de biens et services au consommateur en France.",
+      note: "Does not translate the invoice. Not legal advice.",
+    };
+  }
+  return {
+    ok: true,
+    buyer: "b2b",
+    lang,
+    mention: "Facture établie en français.",
+    source: "Usage + contrôle fiscal (LPF) : une traduction française peut être exigée. Pas une obligation Toubon B2B.",
+    note: "B2B invoices may be in another language; the tax administration can ask for French. Not legal advice.",
+  };
+}

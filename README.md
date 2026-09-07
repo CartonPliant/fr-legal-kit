@@ -68,6 +68,8 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/clause-penale` | Contractual penalty clause (C. civ. 1231-5), not L441-10 |
 | `/v1/periode` | Billing period from/to for continuous services (CGI 289) |
 | `/v1/autofacturation` | Self-billing stamp (CGI 289), optional seller name |
+| `/v1/rgpd` | Invoice data footer: RGPD 6.1.b/c + 10-year keep |
+| `/v1/langue` | French language mention (Toubon B2C / tax-control B2B) |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

@@ -64,6 +64,8 @@ import {
   clausePenale,
   periode,
   autofacturation,
+  rgpd,
+  langue,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -1047,5 +1049,30 @@ describe("autofacturation", () => {
   it("works without a seller name", () => {
     const r = autofacturation({});
     assert.equal(r.mention, "Autofacturation (CGI 289).");
+  });
+});
+
+describe("rgpd", () => {
+  it("names the controller", () => {
+    const r = rgpd({ controller: "Yanis Monnet EI" });
+    assert.equal(r.ok, true);
+    assert.match(r.mention, /Yanis Monnet EI/);
+    assert.match(r.mention, /6\.1/);
+  });
+  it("works without a controller", () => {
+    const r = rgpd({});
+    assert.match(r.mention, /10 ans/);
+  });
+});
+
+describe("langue", () => {
+  it("cites Toubon for a consumer", () => {
+    const r = langue({ buyer: "b2c" });
+    assert.match(r.mention, /94-665/);
+  });
+  it("defaults to French for B2B", () => {
+    const r = langue({ buyer: "b2b" });
+    assert.match(r.mention, /français/);
+    assert.equal(r.buyer, "b2b");
   });
 });

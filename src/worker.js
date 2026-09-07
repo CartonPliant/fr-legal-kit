@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma, joursFrancs, clausePenale, periode, autofacturation } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma, joursFrancs, clausePenale, periode, autofacturation, rgpd, langue } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -924,6 +924,30 @@ const ROUTES = {
     },
     fn: autofacturation,
   },
+  "/v1/rgpd": {
+    description:
+      "French invoice personal-data footer: RGPD art. 6.1.b/c legal bases + 10-year keep (C. com. L123-22). Optional controller name.",
+    tags: ["france", "rgpd", "invoice", "privacy"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { controller: "Yanis Monnet EI" } },
+        output: { type: "json", example: { ok: true } },
+      },
+    },
+    fn: rgpd,
+  },
+  "/v1/langue": {
+    description:
+      "French invoice language mention: Toubon 94-665 for B2C in France; B2B defaults to French for tax control.",
+    tags: ["france", "langue", "toubon", "invoice"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { buyer: "b2c" } },
+        output: { type: "json", example: { ok: true } },
+      },
+    },
+    fn: langue,
+  },
 };
 
 function llmsTxt(base) {
@@ -1120,6 +1144,12 @@ JSON: { "from": "2026-09-01", "to": "2026-09-30" }
 
 POST ${base}/v1/autofacturation
 JSON: { "seller": "ACME SAS" }
+
+POST ${base}/v1/rgpd
+JSON: { "controller": "Yanis Monnet EI" }
+
+POST ${base}/v1/langue
+JSON: { "buyer": "b2c" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
