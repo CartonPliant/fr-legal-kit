@@ -10,6 +10,9 @@ import {
   tvaRate,
   holidays,
   paymentTermMax,
+  mentionFields,
+  vatKey,
+  penaltyText,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -114,5 +117,46 @@ describe("paymentTermMax", () => {
     assert.equal(r.ok, true);
     assert.equal(r.max_days_after_invoice_issue, 60);
     assert.equal(r.alt_45_end_of_month.allowed, true);
+  });
+});
+
+describe("mentionFields", () => {
+  it("includes 293 B for franchise EI facture", () => {
+    const r = mentionFields({ kind: "facture", tva_franchise_293b: true });
+    assert.equal(r.ok, true);
+    const ids = r.required.map((x) => x.id);
+    assert.ok(ids.includes("293b"));
+    assert.ok(ids.includes("siret"));
+    assert.ok(ids.includes("indemnity_40"));
+  });
+});
+
+describe("vatKey", () => {
+  it("computes FR83404833048 for SIREN 404833048", () => {
+    const r = vatKey({ siren: "404833048" });
+    assert.equal(r.ok, true);
+    assert.equal(r.key, "83");
+    assert.equal(r.vat_fr, "FR83404833048");
+  });
+  it("pads key and accepts SIRET (La Poste)", () => {
+    const r = vatKey({ siret: "35600000000000" });
+    assert.equal(r.ok, true);
+    assert.equal(r.siren, "356000000");
+    assert.equal(r.vat_fr, "FR39356000000");
+  });
+  it("rejects short input", () => {
+    const r = vatKey({ siren: "123" });
+    assert.equal(r.ok, false);
+  });
+});
+
+describe("penaltyText", () => {
+  it("uses H2-2026 MRO 2.40 → 12.40% + 40 €", () => {
+    const r = penaltyText({});
+    assert.equal(r.ok, true);
+    assert.equal(r.annual_rate_pct, 12.4);
+    assert.equal(r.indemnity_eur, 40);
+    assert.match(r.mentions.late_penalties, /12,40/);
+    assert.match(r.mentions.indemnity, /40 €/);
   });
 });

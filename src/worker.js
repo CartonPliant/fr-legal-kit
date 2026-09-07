@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -251,6 +251,45 @@ const ROUTES = {
     },
     fn: paymentTermMax,
   },
+  "/v1/mention-fields": {
+    description:
+      "Checklist of French invoice/quote legal mention fields (L441-9, L441-10, 293 B). JSON in, list of required ids out. No lookup.",
+    tags: ["france", "invoice", "mentions", "293B", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { kind: "facture", tva_franchise_293b: true } },
+        output: { type: "json", example: { ok: true, required: [{ id: "siret" }, { id: "293b" }] } },
+      },
+    },
+    fn: mentionFields,
+  },
+  "/v1/vat-key": {
+    description:
+      "French intra-community VAT identifier from SIREN: FR + 2-digit key + SIREN. Key = (12 + 3*(siren%97))%97 (CGI 286 ter). Not a VIES proof.",
+    tags: ["france", "tva", "vat", "siren", "286ter"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { siren: "404833048" } },
+        output: { type: "json", example: { ok: true, vat_fr: "FR83404833048", key: "83" } },
+      },
+    },
+    fn: vatKey,
+  },
+  "/v1/penalty-text": {
+    description:
+      "Statutory L441-10 / D.441-5 invoice mention strings (rate BCE MRO+10 pts + 40 € indemnity). No amount required. Default MRO 2.40% H2 2026.",
+    tags: ["france", "invoice", "L441-10", "mentions", "penalties"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { bce_refi_pct: 2.4 } },
+        output: {
+          type: "json",
+          example: { ok: true, mentions: { late_penalties: "…12,40 %…", indemnity: "…40 €…" } },
+        },
+      },
+    },
+    fn: penaltyText,
+  },
 };
 
 function llmsTxt(base) {
@@ -281,6 +320,18 @@ JSON: { "rate": "standard"|"intermediate"|"reduced"|"super_reduced"|"exempt" }
 
 POST ${base}/v1/holidays
 JSON: { "year": 2026, "alsace_moselle": false }
+
+POST ${base}/v1/payment-term-max
+JSON: { "invoice_date": "2026-09-07" }
+
+POST ${base}/v1/mention-fields
+JSON: { "kind": "facture", "tva_franchise_293b": true }
+
+POST ${base}/v1/vat-key
+JSON: { "siren": "404833048" }
+
+POST ${base}/v1/penalty-text
+JSON: { "bce_refi_pct": 2.4 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
@@ -416,15 +467,41 @@ export default {
     if (path === "/health" && req.method === "GET") {
       return json({ ok: true, pay_to_configured: Boolean(payTo(env)) });
     }
+    if ((path === "/openapi.json" || path === "/.well-known/openapi.json") && req.method === "GET") {
+      const base = origin(req);
+      const paths = {};
+      for (const [p, r] of Object.entries(ROUTES)) {
+        paths[p] = {
+          post: {
+            summary: r.description,
+            operationId: p.replace("/v1/", "").replace(/-/g, "_"),
+            "x-x402": { amount: "0.01", asset: "USDC", network: "eip155:8453" },
+            requestBody: { content: { "application/json": { schema: { type: "object" } } } },
+            responses: { 200: { description: "Paid result" }, 402: { description: "Payment required" } },
+          },
+        };
+      }
+      return json({
+        openapi: "3.1.0",
+        info: { title: SERVICE, version: "1.2.0", description: wellKnownX402(req, env).description },
+        servers: [{ url: base }],
+        paths,
+      });
+    }
     if (path === "/llms.txt" && req.method === "GET") {
       return new Response(llmsTxt(origin(req)), {
+        headers: { "content-type": "text/plain; charset=utf-8", "access-control-allow-origin": "*" },
+      });
+    }
+    if (path === "/.well-known/402index-verify.txt" && req.method === "GET") {
+      return new Response("28ef896cd2d9204716196fc578d6f087bbd2e08da99634ab7ac9277263953b5b\n", {
         headers: { "content-type": "text/plain; charset=utf-8", "access-control-allow-origin": "*" },
       });
     }
     if ((path === "/.well-known/x402.json" || path === "/.well-known/x402") && req.method === "GET") {
       return json(wellKnownX402(req, env));
     }
-    if (path === "/.well-known/agent-card.json" && req.method === "GET") {
+    if ((path === "/.well-known/agent-card.json" || path === "/.well-known/agent.json") && req.method === "GET") {
       return json(agentCard(req));
     }
     if ((path === "/.well-known/mcp.json" || path === "/.well-known/mcp") && req.method === "GET") {
@@ -494,7 +571,7 @@ export default {
     if (path === "/" && req.method === "GET") {
       return json({
         name: SERVICE,
-        paid: "POST /v1/einvoice-who | /v1/late-penalties | /v1/due-date | /v1/tva-rate | /v1/check-siret | /v1/check-iban — $0.01 USDC Base x402",
+        paid: "POST /v1/* — $0.01 USDC Base x402 (einvoice-who, late-penalties, due-date, holidays, payment-term-max, mention-fields, vat-key, penalty-text, tva-rate, check-siret, check-iban)",
         mcp: "POST /mcp",
         docs: "/llms.txt",
         x402: "/.well-known/x402.json",

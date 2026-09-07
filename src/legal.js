@@ -332,6 +332,100 @@ const TVA = {
   exempt: { rate_pct: 0, cgi: "exempt / hors champ — not a rate", examples: ["some education, insurance, 293 B franchise is not a VAT rate"] },
 };
 
+/** Checklist of FR invoice/quote mention fields. L441-9 + L441-10 + 293 B. */
+export function mentionFields(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const kind = String(i.kind || "facture").toLowerCase();
+  const franchise = Boolean(i.tva_franchise_293b ?? true);
+  const ei = i.entrepreneur_individuel !== false;
+  const required = [
+    { id: "date", on: "facture", label: "Date d'émission" },
+    { id: "number", on: "facture", label: "Numéro unique chronologique" },
+    { id: "seller_name", on: "both", label: "Nom du vendeur" },
+    { id: "seller_address", on: "both", label: "Adresse du vendeur" },
+    { id: "siret", on: "both", label: "SIRET" },
+    { id: "buyer_name", on: "both", label: "Nom du client" },
+    { id: "buyer_address", on: "both", label: "Adresse du client" },
+    { id: "lines", on: "both", label: "Désignation, quantité, prix unitaire HT" },
+    { id: "payment_date", on: "facture", label: "Date de règlement" },
+    { id: "late_penalties", on: "facture", label: "Taux des pénalités de retard" },
+    { id: "indemnity_40", on: "facture", label: "Indemnité forfaitaire 40 €" },
+  ];
+  if (franchise) {
+    required.push({ id: "293b", on: "both", label: "TVA non applicable, art. 293 B du CGI" });
+  } else {
+    required.push({ id: "vat_number", on: "both", label: "N° TVA intracommunautaire" });
+    required.push({ id: "vat_rate", on: "facture", label: "Taux / montant de TVA" });
+  }
+  if (ei) required.push({ id: "ei", on: "both", label: "Qualité d'entrepreneur individuel" });
+  if (kind === "devis") {
+    required.push({ id: "validity", on: "devis", label: "Durée de validité (usage commercial, hors L441-9)" });
+  }
+  const filtered = required.filter((r) => r.on === "both" || r.on === kind || kind === "both");
+  return {
+    ok: true,
+    kind,
+    tva_franchise_293b: franchise,
+    entrepreneur_individuel: ei,
+    required: filtered,
+    source: "C. com. L441-9 (mentions facture), L441-10 + D.441-5 (pénalités / 40 €), CGI art. 293 B si franchise.",
+    note: "Checklist helper. RCS/APE/capital social depend on form. Not a legal opinion.",
+  };
+}
+
+/**
+ * FR intra-community VAT identifier from SIREN.
+ * clé = (12 + 3 × (SIREN mod 97)) mod 97  (CGI art. 286 ter — public formula).
+ * Does not prove VIES registration.
+ */
+export function vatKey(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const n = digits(i.siren || i.siret || i.number || i.value);
+  const siren = n.length === 14 ? n.slice(0, 9) : n;
+  if (!SIREN_RE.test(siren)) {
+    return {
+      ok: false,
+      missing: ["siren"],
+      error: "Need siren (9 digits) or siret (14). Uses the first 9 digits of a SIRET.",
+    };
+  }
+  const key = (12 + 3 * (Number(siren) % 97)) % 97;
+  const key2 = String(key).padStart(2, "0");
+  return {
+    ok: true,
+    siren,
+    key: key2,
+    vat_fr: `FR${key2}${siren}`,
+    formula: "(12 + 3 * (siren % 97)) % 97",
+    source: "CGI art. 286 ter (structure FR + clé 2 chiffres + SIREN). Public checksum, not a SIE attribution.",
+    note: "Computes the canonical FR VAT identifier from SIREN. Does not prove the number is registered at VIES. Not a tax ruling.",
+  };
+}
+
+/** Statutory L441-10 / D.441-5 mention strings for invoices (no amount required). */
+export function penaltyText(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const bceIn = i.bce_refi_pct;
+  const bce = bceIn === undefined || bceIn === null || bceIn === "" ? BCE_MRO_PCT_H2_2026 : Number(bceIn);
+  if (!Number.isFinite(bce)) {
+    return { ok: false, missing: ["bce_refi_pct"], error: "bce_refi_pct must be a number if provided." };
+  }
+  const annual = bce + 10;
+  const annualFr = annual.toFixed(2).replace(".", ",");
+  return {
+    ok: true,
+    bce_refi_pct: bce,
+    annual_rate_pct: annual,
+    indemnity_eur: INDEMNITY_EUR,
+    mentions: {
+      late_penalties: `Pénalités de retard : ${annualFr} % par an (taux directeur de la BCE + 10 points — C. com. L441-10).`,
+      indemnity: `Indemnité forfaitaire pour frais de recouvrement : ${INDEMNITY_EUR} € (C. com. D.441-5).`,
+    },
+    source: "C. com. L441-10 + D.441-5. Default MRO H2-2026 = 2.40% (ECB, effective 17 June 2026).",
+    note: "Supplétive statutory wording for the invoice. Not a legal opinion.",
+  };
+}
+
 /** Statutory ceiling on agreed B2B payment terms (L441-10 I). */
 export function paymentTermMax(input) {
   const i = input && typeof input === "object" ? input : {};
