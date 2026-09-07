@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -621,6 +621,18 @@ const ROUTES = {
     },
     fn: siegeSocial,
   },
+  "/v1/net-a-payer": {
+    description:
+      "French invoice footer: HT / VAT / TTC plus collable 'Net à payer : 1 200,00 €'. Same CGI rates as /v1/ht-ttc. Pass exactly one of amount_ht or amount_ttc.",
+    tags: ["france", "invoice", "tva", "ttc", "net-a-payer"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { amount_ht: 1000, rate: "standard" } },
+        output: { type: "json", example: { ok: true, amount_ttc: 1200, mention: "Net à payer : 1 200,00 €" } },
+      },
+    },
+    fn: netAPayer,
+  },
 };
 
 function llmsTxt(base) {
@@ -742,6 +754,9 @@ JSON: { "due_date": "2026-09-07" }
 
 POST ${base}/v1/siege-social
 JSON: { "street": "12 rue des Pyrénées", "postcode": "64000", "city": "Pau" }
+
+POST ${base}/v1/net-a-payer
+JSON: { "amount_ht": 1000, "rate": "standard" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

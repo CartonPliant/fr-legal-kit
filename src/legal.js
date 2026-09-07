@@ -1732,3 +1732,24 @@ export function siegeSocial(input) {
     note: "Does not prove the address on the Kbis. EI may use the professional address instead. Not legal advice.",
   };
 }
+
+/** Invoice footer: HT / VAT / TTC + collable "Net à payer". Wraps /v1/ht-ttc. */
+export function netAPayer(input) {
+  const money = htTtc(input && typeof input === "object" ? input : {});
+  if (!money.ok) return money;
+  const rateFr = String(money.rate_pct).replace(".", ",");
+  return {
+    ok: true,
+    amount_ht: money.amount_ht,
+    vat: money.vat,
+    amount_ttc: money.amount_ttc,
+    rate_pct: money.rate_pct,
+    category: money.category,
+    mention: `Net à payer : ${formatEurFr(money.amount_ttc)}`,
+    mention_ht: `Total HT : ${formatEurFr(money.amount_ht)}`,
+    mention_tva:
+      money.rate_pct === 0 ? "TVA : 0,00 €" : `TVA (${rateFr} %) : ${formatEurFr(money.vat)}`,
+    source: "CGI indicative rates + invoice footer usage (net à payer = TTC).",
+    note: "2-decimal rounding. Not a tax ruling.",
+  };
+}

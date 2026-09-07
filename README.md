@@ -43,6 +43,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/payment-means` | Means of payment mention (virement / chèque / CB / …) L441-9 |
 | `/v1/interest-start` | L441-10: interest starts the calendar day after the due date |
 | `/v1/siege-social` | Siège social mention: street + CP + city (L441-9, not a Kbis) |
+| `/v1/net-a-payer` | Invoice footer HT/TVA/TTC + « Net à payer : 1 200,00 € » |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

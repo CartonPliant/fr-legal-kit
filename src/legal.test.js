@@ -39,6 +39,7 @@ import {
   paymentMeans,
   interestStart,
   siegeSocial,
+  netAPayer,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -599,5 +600,23 @@ describe("siegeSocial", () => {
   });
   it("requires street and city", () => {
     assert.equal(siegeSocial({ postcode: "64000", city: "Pau" }).ok, false);
+  });
+});
+
+describe("netAPayer", () => {
+  it("formats 1000 HT at 20% as net à payer 1 200,00 €", () => {
+    const r = netAPayer({ amount_ht: 1000, rate: "standard" });
+    assert.equal(r.ok, true);
+    assert.equal(r.amount_ttc, 1200);
+    assert.equal(r.mention, "Net à payer : 1 200,00 €");
+    assert.match(r.mention_tva, /20/);
+  });
+  it("reverses from TTC at 5.5%", () => {
+    const r = netAPayer({ amount_ttc: 105.5, rate: "reduced" });
+    assert.equal(r.amount_ht, 100);
+    assert.equal(r.vat, 5.5);
+  });
+  it("requires exactly one of HT or TTC", () => {
+    assert.equal(netAPayer({}).ok, false);
   });
 });
