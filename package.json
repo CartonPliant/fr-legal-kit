@@ -1,11 +1,11 @@
 {
   "name": "fr-legal-kit",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "x402 kit: Base token USD, Base gas, ENS resolve, plus French legal helpers. $0.01 USDC.",
+  "description": "x402 French legal kit for AI agents: e-invoice calendar, L441-10 penalties, SIRET/IBAN checksums. Offline, no scrape.",
   "scripts": {
-    "test": "node --test src/legal.test.js src/favicon.test.js src/base.test.js",
+    "test": "node --test src/legal.test.js src/favicon.test.js",
     "deploy": "npx wrangler@4 deploy"
   }
 }

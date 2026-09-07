@@ -1,6 +1,6 @@
 # fr-legal-kit
 
-x402 API for AI agents. **Base token USD, Base gas, ENS resolve**, plus offline French legal helpers. **$0.01 USDC** on Base per call. No CoinGecko key, no INSEE, no scrape.
+x402 API for AI agents. Offline French legal helpers. **$0.01 USDC** on Base per call. No INSEE, no scrape, no PDP.
 
 Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 
@@ -12,9 +12,6 @@ AgentCash: `npx agentcash add https://fr-legal-kit.monnet-yanis1.workers.dev`
 
 | POST | What |
 |---|---|
-| `/v1/base-price` | Base spot **USD** from Uniswap v3 USDC pool (`{"token":"WETH"}` or `0x`) |
-| `/v1/base-gas` | Base EIP-1559 **gas**: base fee, tips, 21k transfer |
-| `/v1/base-ens` | **ENS** forward resolve (`{"name":"vitalik.eth"}`) |
 | `/v1/einvoice-who` | Who must **receive** e-invoices since 1 Sep 2026 vs **emit** (GE/ETI 2026, PME/micro 2027) |
 | `/v1/late-penalties` | L441-10 C. com. interest (BCE MRO +10 pts, H2-2026 default **2.40%**) + 40 € (D.441-5) |
 | `/v1/due-date` | Invoice date + net days; next open day skipping L.3133-1 holidays 2026–2027 |
