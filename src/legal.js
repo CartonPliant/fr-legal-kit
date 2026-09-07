@@ -1753,3 +1753,56 @@ export function netAPayer(input) {
     note: "2-decimal rounding. Not a tax ruling.",
   };
 }
+
+const DOC_TITLE = {
+  facture: { title: "Facture", is_invoice: true },
+  avoir: { title: "Avoir", is_invoice: true },
+  acompte: { title: "Facture d'acompte", is_invoice: true },
+  note_honoraires: { title: "Note d'honoraires", is_invoice: true },
+  devis: { title: "Devis", is_invoice: false },
+};
+
+const DOC_TITLE_ALIAS = {
+  facture: "facture",
+  invoice: "facture",
+  avoir: "avoir",
+  creditnote: "avoir",
+  acompte: "acompte",
+  downpayment: "acompte",
+  notehonoraires: "note_honoraires",
+  notedhonoraires: "note_honoraires",
+  honoraires: "note_honoraires",
+  devis: "devis",
+  quote: "devis",
+};
+
+/** CGI 289 document title: Facture / Avoir / Facture d'acompte / Note d'honoraires / Devis. */
+export function docTitle(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.kind || i.type || i.doc || "facture")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  const key = DOC_TITLE_ALIAS[raw];
+  if (!key) {
+    return {
+      ok: false,
+      missing: ["kind"],
+      error: "kind: facture|avoir|acompte|note_honoraires|devis",
+    };
+  }
+  const d = DOC_TITLE[key];
+  const number = String(i.number || i.numero || "").trim();
+  const mention = number ? `${d.title} n° ${number}` : d.title;
+  return {
+    ok: true,
+    kind: key,
+    title: d.title,
+    is_invoice: d.is_invoice,
+    number: number || null,
+    mention,
+    source: "CGI art. 289 (identification du document). Note d'honoraires is still an invoice for VAT. Devis is not L441-9.",
+    note: "Document title helper. A devis is not an invoice. Not a legal opinion.",
+  };
+}

@@ -40,6 +40,7 @@ import {
   interestStart,
   siegeSocial,
   netAPayer,
+  docTitle,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -618,5 +619,25 @@ describe("netAPayer", () => {
   });
   it("requires exactly one of HT or TTC", () => {
     assert.equal(netAPayer({}).ok, false);
+  });
+});
+
+describe("docTitle", () => {
+  it("defaults to Facture", () => {
+    const r = docTitle({});
+    assert.equal(r.ok, true);
+    assert.equal(r.title, "Facture");
+    assert.equal(r.is_invoice, true);
+  });
+  it("titles a numbered note d'honoraires", () => {
+    const r = docTitle({ kind: "note d'honoraires", number: "NH-12" });
+    assert.equal(r.title, "Note d'honoraires");
+    assert.equal(r.mention, "Note d'honoraires n° NH-12");
+    assert.equal(r.is_invoice, true);
+  });
+  it("marks a devis as not an invoice", () => {
+    const r = docTitle({ kind: "devis" });
+    assert.equal(r.is_invoice, false);
+    assert.equal(r.title, "Devis");
   });
 });

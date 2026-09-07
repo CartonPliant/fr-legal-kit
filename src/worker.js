@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -633,6 +633,18 @@ const ROUTES = {
     },
     fn: netAPayer,
   },
+  "/v1/doc-title": {
+    description:
+      "CGI 289 document title: Facture, Avoir, Facture d'acompte, Note d'honoraires (still an invoice), or Devis (not L441-9). Optional number → 'Facture n° …'.",
+    tags: ["france", "invoice", "cgi-289", "honoraires", "devis"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { kind: "facture", number: "F-2026-0042" } },
+        output: { type: "json", example: { ok: true, mention: "Facture n° F-2026-0042", is_invoice: true } },
+      },
+    },
+    fn: docTitle,
+  },
 };
 
 function llmsTxt(base) {
@@ -757,6 +769,9 @@ JSON: { "street": "12 rue des Pyrénées", "postcode": "64000", "city": "Pau" }
 
 POST ${base}/v1/net-a-payer
 JSON: { "amount_ht": 1000, "rate": "standard" }
+
+POST ${base}/v1/doc-title
+JSON: { "kind": "facture", "number": "F-2026-0042" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
