@@ -1,11 +1,11 @@
 ---
 name: fr-legal-kit
-description: French legal helpers for agents (e-invoice calendar, L441-10, SIRET/IBAN, TVA, mentions). Use when drafting a French invoice/devis, checking who must e-invoice, late penalties, or checksums. Paid $0.01 USDC on Base via x402. No INSEE, no scrape.
+description: Base token USD (Uniswap v3), Base EIP-1559 gas, ENS resolve, plus French legal helpers. Use when an agent needs a Base spot price, gas, or ENS addr, or a French invoice calendar. Paid $0.01 USDC on Base via x402. No CoinGecko key, no INSEE.
 ---
 
 # fr-legal-kit
 
-Remote MCP + HTTP x402. Offline format/calendar only.
+Remote MCP + HTTP x402. Start with Base price/gas (wallets already pay those).
 
 - MCP: `https://fr-legal-kit.monnet-yanis1.workers.dev/mcp` (`tools/list` free, `tools/call` 402)
 - OpenAPI: `https://fr-legal-kit.monnet-yanis1.workers.dev/openapi.json`
@@ -24,4 +24,4 @@ npx agentcash add https://fr-legal-kit.monnet-yanis1.workers.dev
 { "mcpServers": { "fr-legal-kit": { "url": "https://fr-legal-kit.monnet-yanis1.workers.dev/mcp" } } }
 ```
 
-Start with `einvoice_who`, `late_penalties`, `check_siret`, `due_date`. POST JSON to `/v1/<tool>` if not using MCP. Not legal advice, not a PDP, not INSEE.
+Start with `base_price` (`{"token":"WETH"}`), `base_gas` (`{}`), `base_ens` (`{"name":"vitalik.eth"}`). POST JSON to `/v1/<tool>` if not using MCP. Not legal advice, not a PDP, not INSEE, not CoinGecko.

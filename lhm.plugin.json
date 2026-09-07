@@ -2,14 +2,38 @@
   "author": "CartonPliant",
   "authorUrl": "https://github.com/CartonPliant",
   "cloudEndpoint": "https://fr-legal-kit.monnet-yanis1.workers.dev/mcp",
-  "description": "x402 French legal kit for AI agents: e-invoice calendar, L441-10 penalties, SIRET/IBAN checksums. Offline, no scrape.",
+  "description": "x402 kit: Base token USD, Base gas, ENS resolve, plus French e-invoice/L441-10 helpers. $0.01 USDC.",
   "homepage": "https://github.com/CartonPliant/fr-legal-kit",
   "identifier": "cartonpliant-fr-legal-kit",
   "name": "fr-legal-kit",
-  "tags": ["france", "legal", "invoice", "x402", "siret"],
+  "tags": ["base", "price", "gas", "ens", "x402", "france", "legal"],
   "prompts": [],
   "resources": [],
   "tools": [
+    {
+      "name": "base_price",
+      "description": "Base spot USD from Uniswap v3 USDC pool. Ticker (WETH, USDC, cbBTC) or 0x. No CoinGecko key. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "base_gas",
+      "description": "Base EIP-1559 gas: base fee, tips p10/p50/p90, cost of a 21k transfer. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "base_ens",
+      "description": "ENS forward resolve on Ethereum L1 (name → 0x). On-chain records only. Paid $0.01 USDC Base x402.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
     {
       "name": "late_penalties",
       "description": "French L441-10 late-payment: BCE MRO+10pts interest + 40€ indemnity (D.441-5) from amount_ttc and days_late. Default MRO 2.40% (H2 2026, ECB). No live BCE fetch. Paid $0.01 USDC Base x402.",
@@ -555,5 +579,5 @@
       }
     }
   ],
-  "version": "1.1.0"
+  "version": "1.2.0"
 }

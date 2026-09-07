@@ -1,4 +1,5 @@
 import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer, unit, cgv, reservePropriete, garantieLegale, mediateur, delivery, line, page, retractation, conservation, prescription, garantieCommerciale, exportVat, proforma, joursFrancs, clausePenale, periode, autofacturation, rgpd, langue, commande, debours, arrhes, prorata } from "./legal.js";
+import { basePrice, baseGas, baseEns } from "./base.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -170,13 +171,54 @@ async function handlePaid(req, env, path, description, tags, bazaar, fn) {
   } catch {
     body = {};
   }
-  const result = fn(body);
+  let result;
+  try {
+    result = await fn(body);
+  } catch {
+    result = { ok: false, error: "handler_failed" };
+  }
   const extra = {};
   if (paid.settlement) extra["payment-response"] = b64json({ settlement: paid.settlement });
   return json(result, 200, extra);
 }
 
 const ROUTES = {
+  "/v1/base-price": {
+    description:
+      "Base spot USD from Uniswap v3 USDC pool. Ticker (WETH, USDC, cbBTC) or 0x. No CoinGecko key. 1–2 eth_call.",
+    tags: ["base", "price", "usdc", "uniswap", "token"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { token: "WETH" } },
+        output: { type: "json", example: { ok: true, usd: 2500.12, pool: "0xd0b5…", quote: "0x8335…" } },
+      },
+    },
+    fn: basePrice,
+  },
+  "/v1/base-gas": {
+    description:
+      "Base EIP-1559 gas: base fee, tips p10/p50/p90, cost of a 21k transfer. 1 eth_feeHistory. No oracle key.",
+    tags: ["base", "gas", "eip1559", "fee"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: {} },
+        output: { type: "json", example: { ok: true, base_fee_gwei: 0.02, transfer_21k_wei: "420000000000" } },
+      },
+    },
+    fn: baseGas,
+  },
+  "/v1/base-ens": {
+    description:
+      "ENS forward resolve on Ethereum L1 (name → 0x). 1–2 eth_call. On-chain records only, no CCIP.",
+    tags: ["ens", "eth", "resolve", "name"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { name: "vitalik.eth" } },
+        output: { type: "json", example: { ok: true, address: "0xd8da…", resolver: "0x4976…" } },
+      },
+    },
+    fn: baseEns,
+  },
   "/v1/late-penalties": {
     description:
       "French L441-10 late-payment: BCE MRO+10pts interest + 40€ indemnity (D.441-5) from amount_ttc and days_late. Default MRO 2.40% (H2 2026, ECB). No live BCE fetch.",
@@ -1028,9 +1070,23 @@ const ROUTES = {
 function llmsTxt(base) {
   return `# fr-legal-kit
 
-Offline French legal helpers for AI agents. No INSEE, no scrape, no PDP.
+Base chain helpers + French legal helpers for AI agents. Paid x402. No CoinGecko key, no INSEE, no scrape.
 
 ## Paid — $0.01 USDC on Base (eip155:8453) each POST
+
+Start here (wallets already buy these):
+
+POST ${base}/v1/base-price
+JSON: { "token": "WETH"|"USDC"|"cbBTC"|0x… }
+Base Uniswap v3 spot USD vs USDC.
+
+POST ${base}/v1/base-gas
+JSON: {}
+EIP-1559 base fee + tips + 21k transfer cost.
+
+POST ${base}/v1/base-ens
+JSON: { "name": "vitalik.eth" }
+ENS L1 forward resolve.
 
 POST ${base}/v1/einvoice-who
 JSON: { "size": "micro"|"pme"|"eti"|"ge", "as_of": "YYYY-MM-DD" }
@@ -1254,7 +1310,7 @@ function wellKnownX402(req, env) {
     kind: "resource-server",
     name: SERVICE,
     description:
-      "French e-invoice calendar, L441-10 late penalties, SIRET/IBAN checksums. Offline. No registry lookup.",
+      "Base token USD (Uniswap v3), Base gas, ENS resolve, plus French e-invoice/L441-10 helpers. $0.01 USDC x402. No CoinGecko, no INSEE.",
     resources: Object.entries(ROUTES).map(([path, r]) => ({
       url: `${base}${path}`,
       method: "POST",
@@ -1280,7 +1336,7 @@ function agentCard(req) {
     protocolVersion: "0.3.0",
     name: SERVICE,
     description:
-      "French legal kit for agents: e-invoice obligation calendar (Sep 2026 reform), L441-10 penalties, SIRET/IBAN checksums. Paid x402 USDC on Base.",
+      "Base token USD, Base gas, ENS resolve, plus French e-invoice/L441-10 helpers. Paid x402 USDC on Base.",
     url: `${base}/a2a`,
     version: "1.0.0",
     provider: { organization: "Yanis Monnet EI", url: base },
@@ -1314,7 +1370,7 @@ async function handleMcp(req, env) {
       result: {
         protocolVersion: "2024-11-05",
         capabilities: { tools: {} },
-        serverInfo: { name: SERVICE, version: "1.1.0" },
+        serverInfo: { name: SERVICE, version: "1.2.0" },
       },
     });
   }
@@ -1400,10 +1456,10 @@ export default {
         openapi: "3.1.0",
         info: {
           title: SERVICE,
-          version: "1.3.0",
+          version: "1.4.0",
           description: wellKnownX402(req, env).description,
           "x-guidance":
-            "Paid French legal helpers for agents. POST JSON to /v1/* ($0.01 USDC on Base, HTTP 402). Start with /v1/einvoice-who, /v1/late-penalties, /v1/check-siret, /v1/due-date. MCP: POST /mcp (tools/list free, tools/call paid). No INSEE, no scrape.",
+            "Start with /v1/base-price then /v1/base-gas then /v1/base-ens. POST JSON, $0.01 USDC on Base, HTTP 402. MCP: POST /mcp (tools/list free, tools/call paid). No CoinGecko key, no INSEE, no scrape.",
           contact: { name: "Yanis Monnet", email: "orthies@proton.me" },
         },
         servers: [{ url: base }],
@@ -1430,7 +1486,7 @@ export default {
       const base = origin(req);
       return json({
         name: SERVICE,
-        description: "French legal helpers for agents. tools/list free; tools/call x402 $0.01 USDC Base.",
+        description: "Base price/gas/ENS plus French legal helpers. tools/list free; tools/call x402 $0.01 USDC Base.",
         transport: { type: "streamable-http", url: `${base}/mcp` },
         endpoint: `${base}/mcp`,
         tools: Object.keys(ROUTES).map((p) => p.replace("/v1/", "")),
@@ -1491,9 +1547,30 @@ export default {
       return handlePaid(req, env, path, r.description, r.tags, r.bazaar, r.fn);
     }
     if (path === "/" && req.method === "GET") {
+      const accept = req.headers.get("accept") || "";
+      if (accept.includes("text/html") && !accept.includes("application/json")) {
+        const base = origin(req);
+        const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>fr-legal-kit</title>
+<link rel="icon" href="${base}/favicon.ico"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{font-family:system-ui,sans-serif;max-width:40rem;margin:2rem auto;padding:0 1rem;line-height:1.45}pre{overflow:auto;padding:.75rem;border:1px solid #8884}</style>
+</head><body>
+<h1>fr-legal-kit</h1>
+<p>x402 · <strong>0.01 USDC</strong> on Base per call. Start with token price.</p>
+<pre>npx agentcash add ${base}
+npx skills add CartonPliant/fr-legal-kit</pre>
+<pre>POST ${base}/v1/base-price  {"token":"WETH"}
+POST ${base}/v1/base-gas    {}
+POST ${base}/v1/base-ens    {"name":"vitalik.eth"}</pre>
+<p><a href="${base}/llms.txt">llms.txt</a> · <a href="${base}/openapi.json">openapi</a> · <a href="https://www.x402scan.com/server/edab7902-3c37-4463-97ef-fa115c225b8d">x402scan</a></p>
+</body></html>`;
+        return new Response(html, {
+          headers: { "content-type": "text/html; charset=utf-8", "access-control-allow-origin": "*" },
+        });
+      }
       return json({
         name: SERVICE,
-        paid: "POST /v1/* — $0.01 USDC Base x402 (einvoice-who, late-penalties, due-date, holidays, payment-term-max, mention-fields, vat-key, penalty-text, franchise-293b, tva-rate, check-siret, check-iban)",
+        start: ["/v1/base-price", "/v1/base-gas", "/v1/base-ens"],
+        paid: "POST /v1/* — $0.01 USDC Base x402. Agents: start with /v1/base-price {token:WETH}, /v1/base-gas {}, /v1/base-ens {name}.",
         mcp: "POST /mcp",
         docs: "/llms.txt",
         x402: "/.well-known/x402.json",
