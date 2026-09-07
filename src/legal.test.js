@@ -45,6 +45,7 @@ import {
   eori,
   duplicata,
   rmMention,
+  buyer,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -712,5 +713,24 @@ describe("rmMention", () => {
   });
   it("requires the city", () => {
     assert.equal(rmMention({ siren: "404833048" }).ok, false);
+  });
+});
+
+describe("buyer", () => {
+  it("identifies a B2B client with SIRET", () => {
+    const r = buyer({ name: "ACME SAS", siret: "44306184100047" });
+    assert.equal(r.ok, true);
+    assert.equal(r.siren, "443061841");
+    assert.match(r.mention, /ACME SAS/);
+    assert.match(r.mention, /SIRET/);
+  });
+  it("allows B2C without SIRET", () => {
+    const r = buyer({ name: "Dupont", city: "Pau" });
+    assert.equal(r.ok, true);
+    assert.equal(r.siret, null);
+    assert.match(r.mention, /Pau/);
+  });
+  it("requires a name", () => {
+    assert.equal(buyer({ siret: "44306184100047" }).ok, false);
   });
 });

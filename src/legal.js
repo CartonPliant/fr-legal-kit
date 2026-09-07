@@ -1945,3 +1945,42 @@ export function rmMention(input) {
     note: "Does not prove the artisan is registered. Not a D1 extract. Not legal advice.",
   };
 }
+
+/** L441-9 buyer identification: name + optional SIRET/SIREN + city. */
+export function buyer(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const name = String(i.name || i.legal_name || i.client || i.acheteur || "").trim();
+  if (!name) return { ok: false, missing: ["name"], error: "name of the buyer." };
+  const n = digits(i.siret || i.siren || i.value);
+  let siret = null;
+  let siren = null;
+  let grouped = null;
+  if (n.length === 14) {
+    const chk = siretOk(n);
+    if (!chk.ok) return { ok: false, error: "SIRET checksum failed." };
+    siret = n;
+    siren = n.slice(0, 9);
+    grouped = `${siren.replace(/(\d{3})(?=\d)/g, "$1 ")} ${n.slice(9)}`;
+  } else if (n.length === 9) {
+    if (!SIREN_RE.test(n)) return { ok: false, error: "SIREN must be 9 digits." };
+    siren = n;
+    grouped = n.replace(/(\d{3})(?=\d)/g, "$1 ").trim();
+  } else if (n.length > 0) {
+    return { ok: false, error: "siret (14) or siren (9)." };
+  }
+  const city = String(i.city || i.ville || "").trim();
+  const parts = [`Client : ${name}`];
+  if (siret) parts.push(`SIRET ${grouped}`);
+  else if (siren) parts.push(`SIREN ${grouped}`);
+  if (city) parts.push(city);
+  return {
+    ok: true,
+    name,
+    siret,
+    siren,
+    city: city || null,
+    mention: parts.join(" — "),
+    source: "C. com. L441-9 (identification du client). Format only.",
+    note: "Does not prove the buyer exists. B2C may omit SIRET. Not legal advice.",
+  };
+}

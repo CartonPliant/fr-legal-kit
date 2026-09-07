@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata, rmMention, buyer } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -693,6 +693,18 @@ const ROUTES = {
     },
     fn: rmMention,
   },
+  "/v1/buyer": {
+    description:
+      "French invoice buyer identification (L441-9): client name + optional SIRET/SIREN + city. B2C may omit SIRET. Format only.",
+    tags: ["france", "invoice", "client", "siret", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { name: "ACME SAS", siret: "44306184100047" } },
+        output: { type: "json", example: { ok: true, mention: "Client : ACME SAS — SIRET 443 061 841 00047" } },
+      },
+    },
+    fn: buyer,
+  },
 };
 
 function llmsTxt(base) {
@@ -832,6 +844,9 @@ JSON: { "original_number": "F-2026-0042" }
 
 POST ${base}/v1/rm-mention
 JSON: { "city": "Pau", "siren": "404833048" }
+
+POST ${base}/v1/buyer
+JSON: { "name": "ACME SAS", "siret": "44306184100047" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

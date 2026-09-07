@@ -49,6 +49,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/eori` | FR EORI = FR + SIREN (format only, no customs lookup) |
 | `/v1/duplicata` | Copy of an invoice: same number, stamped DUPLICATA (not a new invoice) |
 | `/v1/rm-mention` | Artisan RM + city + SIREN (`RM Pau 404 833 048`). Format, not a D1 |
+| `/v1/buyer` | L441-9 client identification: name + optional SIRET/SIREN + city |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |
