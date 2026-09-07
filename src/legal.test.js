@@ -29,6 +29,7 @@ import {
   legalForm,
   ibanFr,
   creditNote,
+  phoneFr,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -406,5 +407,26 @@ describe("creditNote", () => {
     });
     assert.equal(r.credit_ttc, 120);
     assert.equal(r.signed_ht, -100);
+  });
+});
+
+describe("phoneFr", () => {
+  it("normalizes a metropolitan mobile", () => {
+    const r = phoneFr({ phone: "06 12 34 56 78" });
+    assert.equal(r.ok, true);
+    assert.equal(r.national, "0612345678");
+    assert.equal(r.e164, "+33612345678");
+    assert.equal(r.kind, "mobile");
+    assert.equal(r.invoice_mention, "Tél. 06 12 34 56 78");
+  });
+  it("accepts +33 geographic", () => {
+    const r = phoneFr({ tel: "+33 1 23 45 67 89" });
+    assert.equal(r.ok, true);
+    assert.equal(r.national, "0123456789");
+    assert.equal(r.kind, "geographic");
+    assert.equal(r.zone, "01");
+  });
+  it("rejects a short number", () => {
+    assert.equal(phoneFr({ phone: "123" }).ok, false);
   });
 });

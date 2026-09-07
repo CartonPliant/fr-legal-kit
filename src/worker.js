@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -498,6 +498,18 @@ const ROUTES = {
     },
     fn: creditNote,
   },
+  "/v1/phone-fr": {
+    description:
+      "French phone format (ARCEP numbering plan): 10-digit national or +33/0033 → E.164, grouped mention, kind mobile/geo/voip/overseas. No subscriber lookup.",
+    tags: ["france", "phone", "invoice", "e164", "arcep"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { phone: "06 12 34 56 78" } },
+        output: { type: "json", example: { ok: true, e164: "+33612345678", kind: "mobile" } },
+      },
+    },
+    fn: phoneFr,
+  },
 };
 
 function llmsTxt(base) {
@@ -589,6 +601,9 @@ JSON: { "iban": "FR1420041010050500013M02606" }
 
 POST ${base}/v1/credit-note
 JSON: { "original_number": "F-2026-0042", "last_avoir": "AV-2026-0007", "amount_ht": 100 }
+
+POST ${base}/v1/phone-fr
+JSON: { "phone": "06 12 34 56 78" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

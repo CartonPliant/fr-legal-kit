@@ -1283,3 +1283,60 @@ export function creditNote(input) {
   }
   return out;
 }
+
+/** French phone format (ARCEP plan): 10-digit national or +33 / 0033. No subscriber lookup. */
+export function phoneFr(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.phone || i.tel || i.numero || i.value || "").trim();
+  if (!raw) {
+    return { ok: false, missing: ["phone"], error: "phone required (0XXXXXXXXX or +33…)." };
+  }
+  const n = digits(raw);
+  let national = "";
+  if (n.length === 10 && n[0] === "0") national = n;
+  else if (n.length === 11 && n.startsWith("33")) national = "0" + n.slice(2);
+  else if (n.length === 13 && n.startsWith("0033")) national = "0" + n.slice(4);
+  else {
+    return { ok: false, compact: n, error: "French number: 10 digits starting with 0, or +33 / 0033." };
+  }
+  const prefix2 = national.slice(0, 2);
+  const prefix4 = national.slice(0, 4);
+  const overseas = {
+    "0262": "reunion",
+    "0692": "reunion",
+    "0693": "reunion",
+    "0590": "guadeloupe",
+    "0690": "guadeloupe",
+    "0594": "guyane",
+    "0694": "guyane",
+    "0596": "martinique",
+    "0696": "martinique",
+    "0269": "mayotte",
+    "0639": "mayotte",
+  };
+  let kind = "other";
+  let zone = prefix2;
+  if (overseas[prefix4]) {
+    kind = "overseas";
+    zone = overseas[prefix4];
+  } else if (prefix2 === "06" || prefix2 === "07") kind = "mobile";
+  else if (["01", "02", "03", "04", "05"].includes(prefix2)) kind = "geographic";
+  else if (prefix2 === "09") kind = "voip";
+  else if (prefix2 === "08") kind = national.startsWith("0800") || national.startsWith("0805") ? "freephone" : "special";
+  const rest = national.slice(1);
+  const e164 = "+33" + rest;
+  const grouped = national.replace(/(\d{2})(?=\d)/g, "$1 ").trim();
+  const international_grouped = "+33 " + rest.replace(/(\d)(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
+  return {
+    ok: true,
+    national,
+    e164,
+    grouped,
+    international_grouped,
+    kind,
+    zone,
+    invoice_mention: `Tél. ${grouped}`,
+    source: "ARCEP French numbering plan (E.164 +33, national 10 digits). Format only.",
+    note: "Does not prove the line exists or is assigned. Not a lookup. Not legal advice.",
+  };
+}
