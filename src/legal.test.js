@@ -35,6 +35,7 @@ import {
   invoiceCurrency,
   escompte,
   acompte,
+  dateFr,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -527,5 +528,22 @@ describe("acompte", () => {
   });
   it("requires amount_ttc", () => {
     assert.equal(acompte({}).ok, false);
+  });
+});
+
+describe("dateFr", () => {
+  it("formats 2026-09-07 as lundi 07/09/2026", () => {
+    const r = dateFr({ date: "2026-09-07" });
+    assert.equal(r.ok, true);
+    assert.equal(r.formatted, "07/09/2026");
+    assert.equal(r.weekday, "lundi");
+    assert.equal(r.mention, "Date de facture : 07/09/2026");
+  });
+  it("writes a long French form", () => {
+    const r = dateFr({ invoice_date: "2026-04-06" });
+    assert.equal(r.long_fr, "lundi 6 avril 2026");
+  });
+  it("rejects a non-ISO date", () => {
+    assert.equal(dateFr({ date: "07/09/2026" }).ok, false);
   });
 });

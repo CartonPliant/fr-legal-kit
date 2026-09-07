@@ -39,6 +39,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/invoice-currency` | EUR legal tender; foreign ccy OK, VAT in euros. No FX |
 | `/v1/escompte` | L441-10 early-payment discount mention, or « Pas d'escompte… » |
 | `/v1/acompte` | Down-payment invoice: AC- number, 30% default, remaining TTC (CGI 289) |
+| `/v1/date-fr` | Invoice date JJ/MM/AAAA + weekday (L441-9 emission date format) |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |

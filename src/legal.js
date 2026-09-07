@@ -1582,3 +1582,43 @@ export function acompte(input) {
     note: "Down-payment invoice helper. Final invoice must deduct the acompte. Not a legal opinion.",
   };
 }
+
+const WEEKDAYS_FR = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+const MONTHS_FR = [
+  "janvier",
+  "février",
+  "mars",
+  "avril",
+  "mai",
+  "juin",
+  "juillet",
+  "août",
+  "septembre",
+  "octobre",
+  "novembre",
+  "décembre",
+];
+
+/** French civil date for invoices: YYYY-MM-DD → JJ/MM/AAAA + weekday. L441-9 emission date format. */
+export function dateFr(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const d = parseISODate(i.date || i.invoice_date || i.value || i.day);
+  if (!d) return { ok: false, missing: ["date"], error: "date YYYY-MM-DD." };
+  const iso = ymd(d);
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const yyyy = String(d.getUTCFullYear());
+  const formatted = `${dd}/${mm}/${yyyy}`;
+  const weekday = WEEKDAYS_FR[d.getUTCDay()];
+  const long_fr = `${weekday} ${Number(dd)} ${MONTHS_FR[d.getUTCMonth()]} ${yyyy}`;
+  return {
+    ok: true,
+    iso,
+    formatted,
+    weekday,
+    long_fr,
+    mention: `Date de facture : ${formatted}`,
+    source: "C. com. L441-9 (date d'émission). Format civil français JJ/MM/AAAA.",
+    note: "Calendar format only. Does not prove the invoice was issued that day. Not legal advice.",
+  };
+}

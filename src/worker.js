@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -573,6 +573,18 @@ const ROUTES = {
     },
     fn: acompte,
   },
+  "/v1/date-fr": {
+    description:
+      "French invoice date format: YYYY-MM-DD → JJ/MM/AAAA, weekday, long form, collable 'Date de facture : …'. L441-9 emission date.",
+    tags: ["france", "invoice", "date", "L441-9"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { date: "2026-09-07" } },
+        output: { type: "json", example: { ok: true, formatted: "07/09/2026", weekday: "lundi" } },
+      },
+    },
+    fn: dateFr,
+  },
 };
 
 function llmsTxt(base) {
@@ -682,6 +694,9 @@ JSON: { "rate_pct": 2, "days": 10 }
 
 POST ${base}/v1/acompte
 JSON: { "amount_ttc": 1200, "last_number": "AC-2026-0003" }
+
+POST ${base}/v1/date-fr
+JSON: { "date": "2026-09-07" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 
