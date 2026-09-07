@@ -1063,3 +1063,23 @@ export function quoteValidity(input) {
     note: "Not a statutory term. Put the duration on the quote. Not legal advice.",
   };
 }
+
+/** APE/NAF rev.2 format: 4 digits + 1 letter (e.g. 62.01Z). No INSEE lookup. */
+export function apeNaf(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const raw = String(i.code || i.ape || i.naf || i.value || "")
+    .toUpperCase()
+    .replace(/\s+/g, "");
+  const compact = raw.replace(/\./g, "");
+  if (!/^\d{4}[A-Z]$/.test(compact)) {
+    return { ok: false, missing: ["code"], error: "APE/NAF: 4 digits + 1 letter (e.g. 62.01Z or 6201Z)." };
+  }
+  return {
+    ok: true,
+    compact,
+    formatted: `${compact.slice(0, 2)}.${compact.slice(2, 4)}${compact.slice(4)}`,
+    division: compact.slice(0, 2),
+    source: "INSEE NAF rev. 2 code shape (APE). Format check only.",
+    note: "Does not prove the code is assigned. APE on invoices is usage for sociétés, not a universal L441-9 field. Not legal advice.",
+  };
+}

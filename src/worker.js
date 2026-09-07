@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -431,6 +431,18 @@ const ROUTES = {
     },
     fn: quoteValidity,
   },
+  "/v1/ape-naf": {
+    description:
+      "French APE/NAF rev.2 format check: 4 digits + 1 letter (62.01Z). No INSEE lookup of the label.",
+    tags: ["france", "ape", "naf", "invoice", "checksum"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { code: "62.01Z" } },
+        output: { type: "json", example: { ok: true, formatted: "62.01Z", compact: "6201Z" } },
+      },
+    },
+    fn: apeNaf,
+  },
 };
 
 function llmsTxt(base) {
@@ -507,6 +519,9 @@ JSON: { "siret": "44306184100047" }
 
 POST ${base}/v1/quote-validity
 JSON: { "quote_date": "2026-09-07", "validity_days": 30 }
+
+POST ${base}/v1/ape-naf
+JSON: { "code": "62.01Z" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

@@ -24,6 +24,7 @@ import {
   daysLate,
   sirenFromSiret,
   quoteValidity,
+  apeNaf,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -330,5 +331,20 @@ describe("quoteValidity", () => {
     assert.equal(r.validity_days, 30);
     assert.equal(r.expires_on, "2026-10-07");
     assert.match(r.mention, /30 jours/);
+  });
+});
+
+describe("apeNaf", () => {
+  it("accepts dotted and compact 62.01Z", () => {
+    const a = apeNaf({ code: "62.01Z" });
+    const b = apeNaf({ ape: "6201Z" });
+    assert.equal(a.ok, true);
+    assert.equal(a.formatted, "62.01Z");
+    assert.equal(a.compact, "6201Z");
+    assert.equal(b.ok, true);
+    assert.equal(b.formatted, "62.01Z");
+  });
+  it("rejects 4 digits without a letter", () => {
+    assert.equal(apeNaf({ code: "6201" }).ok, false);
   });
 });
