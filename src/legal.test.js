@@ -19,6 +19,7 @@ import {
   invoiceNumbering,
   amountWords,
   alsaceHolidays,
+  dueDateEom,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -263,5 +264,15 @@ describe("alsaceHolidays", () => {
     const dates = r.extras.map((x) => x.date);
     assert.ok(dates.includes("2026-04-03"));
     assert.ok(dates.includes("2026-12-26"));
+  });
+});
+
+describe("dueDateEom", () => {
+  it("computes 45 FDM from 2026-09-07", () => {
+    const r = dueDateEom({ invoice_date: "2026-09-07" });
+    assert.equal(r.ok, true);
+    assert.equal(r.month_end, "2026-09-30");
+    assert.equal(r.statutory_45_eom.due, "2026-11-14");
+    assert.equal(r.usage_45_then_eom.due, "2026-10-31");
   });
 });

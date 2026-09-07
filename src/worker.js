@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -368,6 +368,21 @@ const ROUTES = {
     },
     fn: alsaceHolidays,
   },
+  "/v1/due-date-eom": {
+    description:
+      "French 45-days-end-of-month due date (L441-10 I derogation). Statutory reading: 45 days after month-end of the invoice. Alternate usage: +45 then EOM. Must be stipulated.",
+    tags: ["france", "invoice", "L441-10", "due-date", "fin-de-mois"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { invoice_date: "2026-09-07" } },
+        output: {
+          type: "json",
+          example: { ok: true, statutory_45_eom: { due: "2026-11-14" }, usage_45_then_eom: { due: "2026-10-31" } },
+        },
+      },
+    },
+    fn: dueDateEom,
+  },
 };
 
 function llmsTxt(base) {
@@ -429,6 +444,9 @@ JSON: { "amount_eur": 12.4 }
 
 POST ${base}/v1/alsace-holidays
 JSON: { "year": 2026 }
+
+POST ${base}/v1/due-date-eom
+JSON: { "invoice_date": "2026-09-07" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

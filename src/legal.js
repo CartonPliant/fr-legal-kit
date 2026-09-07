@@ -324,6 +324,42 @@ export function dueDate(input) {
   };
 }
 
+function endOfMonth(d) {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
+}
+
+/** 45-days-end-of-month due dates (L441-10 I derogation). Must be stipulated. */
+export function dueDateEom(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const start = parseISODate(i.invoice_date || i.date);
+  const alsace = Boolean(i.alsace_moselle);
+  if (!start) {
+    return { ok: false, missing: ["invoice_date"], error: "invoice_date YYYY-MM-DD required." };
+  }
+  const monthEnd = endOfMonth(start);
+  const statutory = addDays(monthEnd, 45);
+  const plus45 = addDays(start, 45);
+  const usage = endOfMonth(plus45);
+  return {
+    ok: true,
+    invoice_date: ymd(start),
+    month_end: ymd(monthEnd),
+    statutory_45_eom: {
+      due: ymd(statutory),
+      next_open_day: ymd(nextOpenDay(statutory, alsace)),
+      meaning: "45 calendar days after the end of the month of invoice issue (usual L441-10 I reading).",
+    },
+    usage_45_then_eom: {
+      due: ymd(usage),
+      next_open_day: ymd(nextOpenDay(usage, alsace)),
+      meaning: "Invoice date + 45 calendar days, then end of that month. Some contracts use this.",
+    },
+    alsace_moselle: alsace,
+    source: "C. com. L441-10 I (dérogation 45 jours fin de mois, si stipulée et non abusive).",
+    note: "Optional ceiling, not the default. Default max is 60 days after invoice issue (/v1/payment-term-max). Not legal advice.",
+  };
+}
+
 const TVA = {
   standard: { rate_pct: 20, cgi: "CGI art. 278", examples: ["most goods and services"] },
   intermediate: { rate_pct: 10, cgi: "CGI art. 278 bis", examples: ["restaurant on-site, passenger transport, some renovations"] },
