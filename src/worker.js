@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote, phoneFr, capitalSocial, rcsMention, invoiceCurrency, escompte, acompte, dateFr, paymentMeans, interestStart, siegeSocial, netAPayer, docTitle, autoliquidation, eori, duplicata } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -669,6 +669,18 @@ const ROUTES = {
     },
     fn: eori,
   },
+  "/v1/duplicata": {
+    description:
+      "French invoice duplicata: same original number stamped DUPLICATA. Not a new L441-9 number and not a credit note. Collable 'Ne pas comptabiliser une seconde fois.'",
+    tags: ["france", "invoice", "duplicata", "L441-9", "CGI-289"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { original_number: "F-2026-0042" } },
+        output: { type: "json", example: { ok: true, keeps_number: true, mention: "DUPLICATA de la facture n° F-2026-0042." } },
+      },
+    },
+    fn: duplicata,
+  },
 };
 
 function llmsTxt(base) {
@@ -802,6 +814,9 @@ JSON: { "kind": "intra_eu" }
 
 POST ${base}/v1/eori
 JSON: { "siren": "404833048" }
+
+POST ${base}/v1/duplicata
+JSON: { "original_number": "F-2026-0042" }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

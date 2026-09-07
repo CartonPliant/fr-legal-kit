@@ -1899,3 +1899,32 @@ export function eori(input) {
   }
   return { ok: false, missing: ["siren"], error: "Need siren (9 digits), siret (14), or FR+SIREN EORI." };
 }
+
+/** Duplicate copy of an existing invoice: same number, stamped DUPLICATA. Not a new L441-9 number. */
+export function duplicata(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const original = String(i.original_number || i.invoice_number || i.facture || i.number || "").trim();
+  if (!original) {
+    return {
+      ok: false,
+      missing: ["original_number"],
+      error: "original_number of the invoice being copied.",
+    };
+  }
+  const reason = String(i.reason || i.motif || "").trim();
+  const mentions = [
+    `DUPLICATA de la facture n° ${original}.`,
+    "Ce document reprend le numéro d'origine ; il ne constitue pas une nouvelle facture (C. com. L441-9).",
+    "Ne pas comptabiliser une seconde fois.",
+  ];
+  if (reason) mentions.push(`Motif : ${reason}.`);
+  return {
+    ok: true,
+    original_number: original,
+    keeps_number: true,
+    mentions,
+    mention: mentions.join(" "),
+    source: "C. com. L441-9 (numéro unique, pas de trou) + CGI art. 289 (copie identifiée).",
+    note: "A duplicata is a copy, not a credit note and not a new invoice. Not a legal opinion.",
+  };
+}

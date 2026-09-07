@@ -43,6 +43,7 @@ import {
   docTitle,
   autoliquidation,
   eori,
+  duplicata,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -676,5 +677,22 @@ describe("eori", () => {
   });
   it("requires an identifier", () => {
     assert.equal(eori({}).ok, false);
+  });
+});
+
+describe("duplicata", () => {
+  it("keeps the original invoice number", () => {
+    const r = duplicata({ original_number: "F-2026-0042" });
+    assert.equal(r.ok, true);
+    assert.equal(r.keeps_number, true);
+    assert.match(r.mention, /F-2026-0042/);
+    assert.match(r.mention, /DUPLICATA/);
+  });
+  it("appends a reason", () => {
+    const r = duplicata({ original_number: "F-1", motif: "perte" });
+    assert.ok(r.mentions.some((m) => /perte/.test(m)));
+  });
+  it("requires original_number", () => {
+    assert.equal(duplicata({}).ok, false);
   });
 });
