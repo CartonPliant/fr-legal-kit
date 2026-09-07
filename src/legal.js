@@ -1196,3 +1196,90 @@ export function ibanFr(input) {
     note: "Checksum and structure only. Does not prove the account exists.",
   };
 }
+
+/** French credit note (avoir): own L441-9 sequence + CGI 289 reference to the original invoice. */
+export function creditNote(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const original = String(i.original_number || i.invoice_number || i.facture || i.original || "").trim();
+  if (!original) {
+    return {
+      ok: false,
+      missing: ["original_number"],
+      error: "original_number of the invoice being credited is required.",
+    };
+  }
+  const last = String(i.last_avoir || i.last_number || i.last || "").trim();
+  let prefix = "AV-";
+  let seq = null;
+  let width = 4;
+  if (last) {
+    const m = /^(.*?)(\d+)$/.exec(last);
+    if (!m) {
+      return { ok: false, error: "last_avoir must end with digits (e.g. AV-2026-0007)." };
+    }
+    prefix = m[1];
+    seq = Number(m[2]);
+    width = m[2].length;
+  } else {
+    const year = i.year != null ? String(i.year) : "2026";
+    prefix = i.prefix != null ? String(i.prefix) : `AV-${year}-`;
+    if (i.last_seq !== undefined && i.last_seq !== null && i.last_seq !== "") {
+      seq = Number(i.last_seq);
+      if (!Number.isFinite(seq) || seq < 0 || !Number.isInteger(seq)) {
+        return { ok: false, missing: ["last_seq"], error: "last_seq must be a non-negative integer." };
+      }
+    } else {
+      seq = 0;
+    }
+    width = Number(i.width) > 0 ? Number(i.width) : 4;
+  }
+  const next = `${prefix}${String(seq + 1).padStart(width, "0")}`;
+  const rules = [
+    { id: "own_number", text: "L'avoir est une facture : numéro unique (C. com. L441-9)." },
+    {
+      id: "no_reuse",
+      text: "Le numéro de la facture d'origine n'est pas réutilisé ; une facture annulée conserve son numéro.",
+    },
+    { id: "ref_original", text: "L'avoir mentionne le numéro de la facture d'origine (CGI art. 289)." },
+    { id: "own_seq", text: "Séquence dédiée (AV-…) admise si elle est chronologique et sans trou." },
+    {
+      id: "vat_reverse",
+      text: "Si la facture d'origine a facturé de la TVA, l'avoir la reverse à due proportion.",
+    },
+  ];
+  const reason = String(i.reason || i.motif || "").trim();
+  const mentions = [`Avoir n° ${next} se rapportant à la facture n° ${original}.`];
+  if (reason) mentions.push(`Motif : ${reason}.`);
+  const out = {
+    ok: true,
+    original_number: original,
+    last_avoir: last || null,
+    next_number: next,
+    mentions,
+    rules,
+    source: "C. com. L441-9 (numérotation) + CGI art. 289 (référence à la facture d'origine).",
+    note: "Credit-note numbering and collable mentions. Does not create a PDF. Not a legal opinion.",
+  };
+  const hasHt = i.amount_ht !== undefined && i.amount_ht !== null && i.amount_ht !== "";
+  const hasTtc = i.amount_ttc !== undefined && i.amount_ttc !== null && i.amount_ttc !== "";
+  if (hasHt || hasTtc) {
+    const money = htTtc({
+      amount_ht: hasHt ? i.amount_ht : undefined,
+      amount_ttc: hasTtc ? i.amount_ttc : undefined,
+      rate: i.rate || i.category || i.kind || "standard",
+    });
+    if (!money.ok) return money;
+    out.credit_ht = money.amount_ht;
+    out.credit_vat = money.vat;
+    out.credit_ttc = money.amount_ttc;
+    out.signed_ht = round2(-money.amount_ht);
+    out.signed_vat = round2(-money.vat);
+    out.signed_ttc = round2(-money.amount_ttc);
+    out.rate_pct = money.rate_pct;
+    out.category = money.category;
+    mentions.push(
+      `Montant crédité : ${money.amount_ht.toFixed(2).replace(".", ",")} € HT / ${money.amount_ttc.toFixed(2).replace(".", ",")} € TTC (TVA ${String(money.rate_pct).replace(".", ",")} %).`,
+    );
+  }
+  return out;
+}

@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, dueDateEom, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays, htTtc, daysLate, sirenFromSiret, quoteValidity, apeNaf, postcodeFr, legalForm, ibanFr, creditNote } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -479,6 +479,25 @@ const ROUTES = {
     },
     fn: ibanFr,
   },
+  "/v1/credit-note": {
+    description:
+      "French credit note (avoir): next number in a dedicated AV- sequence, collable CGI 289 mention referencing the original invoice, optional HT/TTC reversal. Does not reuse the cancelled invoice number (L441-9).",
+    tags: ["france", "invoice", "avoir", "credit-note", "L441-9", "CGI-289"],
+    bazaar: {
+      info: {
+        input: {
+          type: "http",
+          method: "POST",
+          body: { original_number: "F-2026-0042", last_avoir: "AV-2026-0007", amount_ht: 100 },
+        },
+        output: {
+          type: "json",
+          example: { ok: true, next_number: "AV-2026-0008", signed_ttc: -120 },
+        },
+      },
+    },
+    fn: creditNote,
+  },
 };
 
 function llmsTxt(base) {
@@ -567,6 +586,9 @@ JSON: { "form": "sas" }
 
 POST ${base}/v1/iban-fr
 JSON: { "iban": "FR1420041010050500013M02606" }
+
+POST ${base}/v1/credit-note
+JSON: { "original_number": "F-2026-0042", "last_avoir": "AV-2026-0007", "amount_ht": 100 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

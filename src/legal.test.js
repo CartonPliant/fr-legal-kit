@@ -28,6 +28,7 @@ import {
   postcodeFr,
   legalForm,
   ibanFr,
+  creditNote,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -382,5 +383,28 @@ describe("ibanFr", () => {
     assert.equal(r.bank, "20041");
     assert.equal(r.branch, "01005");
     assert.equal(r.rib_key, "06");
+  });
+});
+
+describe("creditNote", () => {
+  it("increments AV-2026-0007 and references the original invoice", () => {
+    const r = creditNote({ original_number: "F-2026-0042", last_avoir: "AV-2026-0007" });
+    assert.equal(r.ok, true);
+    assert.equal(r.next_number, "AV-2026-0008");
+    assert.match(r.mentions[0], /F-2026-0042/);
+    assert.ok(r.rules.some((x) => x.id === "ref_original"));
+  });
+  it("requires original_number", () => {
+    assert.equal(creditNote({ last_avoir: "AV-1" }).ok, false);
+  });
+  it("reverses 100 HT at 20%", () => {
+    const r = creditNote({
+      original_number: "F-1",
+      last_avoir: "AV-0000",
+      amount_ht: 100,
+      rate: "standard",
+    });
+    assert.equal(r.credit_ttc, 120);
+    assert.equal(r.signed_ht, -100);
   });
 });
