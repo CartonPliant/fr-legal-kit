@@ -18,6 +18,7 @@ import {
   openDays,
   invoiceNumbering,
   amountWords,
+  alsaceHolidays,
 } from "./legal.js";
 
 describe("siretOk", () => {
@@ -250,5 +251,17 @@ describe("amountWords", () => {
       amountWords({ amount_eur: 1234.56 }).words,
       "mille deux cent trente-quatre euros et cinquante-six centimes",
     );
+  });
+});
+
+describe("alsaceHolidays", () => {
+  it("lists Good Friday and St Stephen 2026 plus 11 metropolitan days", () => {
+    const r = alsaceHolidays({ year: 2026 });
+    assert.equal(r.ok, true);
+    assert.equal(r.extra_count, 2);
+    assert.equal(r.combined_count, 13);
+    const dates = r.extras.map((x) => x.date);
+    assert.ok(dates.includes("2026-04-03"));
+    assert.ok(dates.includes("2026-12-26"));
   });
 });

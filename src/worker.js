@@ -1,4 +1,4 @@
-import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords } from "./legal.js";
+import { latePenalties, einvoiceWho, checkSiret, checkIban, dueDate, tvaRate, holidays, paymentTermMax, mentionFields, vatKey, penaltyText, franchise293b, dunningSteps, openDays, invoiceNumbering, amountWords, alsaceHolidays } from "./legal.js";
 
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const AMOUNT = "10000"; // $0.01 USDC
@@ -356,6 +356,18 @@ const ROUTES = {
     },
     fn: amountWords,
   },
+  "/v1/alsace-holidays": {
+    description:
+      "Alsace-Moselle extra public holidays (Good Friday + St Stephen) plus the combined 2026–2027 calendar. In addition to L.3133-1 metropolitan days.",
+    tags: ["france", "alsace", "moselle", "jours-feries", "calendar"],
+    bazaar: {
+      info: {
+        input: { type: "http", method: "POST", body: { year: 2026 } },
+        output: { type: "json", example: { ok: true, extra_count: 2, combined_count: 13 } },
+      },
+    },
+    fn: alsaceHolidays,
+  },
 };
 
 function llmsTxt(base) {
@@ -414,6 +426,9 @@ JSON: { "last_number": "F-2026-0042" }
 
 POST ${base}/v1/amount-words
 JSON: { "amount_eur": 12.4 }
+
+POST ${base}/v1/alsace-holidays
+JSON: { "year": 2026 }
 
 MCP (tools/list free, tools/call paid): POST ${base}/mcp
 

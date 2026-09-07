@@ -810,6 +810,34 @@ export function holidays(input) {
   };
 }
 
+/** Dedicated Alsace-Moselle extras: Good Friday + St Stephen, plus the combined calendar. */
+export function alsaceHolidays(input) {
+  const i = input && typeof input === "object" ? input : {};
+  const year = String(i.year || "2026");
+  if (!/^\d{4}$/.test(year)) {
+    return { ok: false, missing: ["year"], error: "year as YYYY (2026 or 2027)." };
+  }
+  const extras = [];
+  for (const [d, name] of Object.entries(ALSACE_EXTRA)) {
+    if (d.startsWith(year + "-")) extras.push({ date: d, name, scope: "alsace-moselle" });
+  }
+  extras.sort((a, b) => a.date.localeCompare(b.date));
+  const metro = holidays({ year, alsace_moselle: false });
+  const combined = [...(metro.holidays || []), ...extras].sort((a, b) => a.date.localeCompare(b.date));
+  return {
+    ok: extras.length > 0,
+    year,
+    extra_count: extras.length,
+    extras,
+    combined_count: combined.length,
+    combined,
+    departments: ["67", "68", "57"],
+    source:
+      "Alsace-Moselle extras (Vendredi saint, Saint-Étienne) in addition to C. trav. L.3133-1 metropolitan days. Local civil status (concordat).",
+    note: "Bas-Rhin, Haut-Rhin, Moselle. Not overseas abolition days. Not legal advice.",
+  };
+}
+
 export function tvaRate(input) {
   const i = input && typeof input === "object" ? input : {};
   const key = String(i.rate || i.category || i.kind || "").toLowerCase().replace(/[-\s]+/g, "_");

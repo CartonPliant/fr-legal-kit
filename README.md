@@ -22,6 +22,7 @@ Live: https://fr-legal-kit.monnet-yanis1.workers.dev
 | `/v1/open-days` | Inclusive open-day count between two dates (skip weekend + L.3133-1) |
 | `/v1/invoice-numbering` | L441-9 chronological sequence: next number + no-gap rules |
 | `/v1/amount-words` | French amount in words (12,40 → douze euros et quarante centimes) |
+| `/v1/alsace-holidays` | Alsace-Moselle extras (Good Friday + St Stephen) + combined calendar |
 | `/v1/check-siret` | SIRET/SIREN checksum only |
 | `/v1/check-iban` | IBAN ISO 13616 checksum only |
 | `POST /mcp` | MCP JSON-RPC: `tools/list` free, `tools/call` $0.01 |
